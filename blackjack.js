@@ -8,20 +8,114 @@ player:
 */
 
 
+const SUITS = ["Hearts", "Diamonds", "Spades", "Clubs"];
+const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Ace", "Jack", "Queen", "King"];
+
+
 class Chip {
-    constructor() {
+    constructor(parent=null, position=null) {
+        let chip = document.createElement("div");
 
+        this.getChip = function() {
+            return chip;
+        };
+
+        this.changeChipPosition = function(position=null) {
+
+        };
     }
 }
 
-class Player {
-    constructor() {
 
+class Card {
+    constructor(cardSuit, cardRank, parent=null, position=null) {
+        let card = document.createElement("div");
+        card.className = "card";
+
+        let suit = cardSuit;
+        let rank = cardRank;
+
+        this.getCard = function() {
+            return card;
+        };
+
+        this.getSuit = function() {
+            return suit;
+        };
+
+        this.getRank = function() {
+            return rank;
+        };
+
+        this.changeCardPosition = function(position=null) {
+
+        };
     }
 }
 
-class Dealer{
-    constructor() {
 
+class Deck {
+    constructor() {
+        let deck = [];
+
+        this.getDeck = function() {
+            return deck;
+        };
+
+        this.changeDeckPosition = function(position=null) {
+
+        };
     }
 }
+
+
+class Hand {
+    constructor() {
+        let hand = [];
+
+        this.getHand = function() {
+            return hand;
+        };
+    }
+}
+
+
+class Player extends Hand {
+    constructor() {
+        let chips = [];
+
+        this.hit = function() {
+
+        };
+
+        this.stand = function() {
+
+        };
+
+        this.doubleDown = function() {
+
+        };
+
+        this.split = function() {
+
+        };
+
+        this.fold = function() {
+
+        };
+    }
+}
+
+
+class Dealer {
+    constructor() {
+
+
+        this.deal = function(player=null) {
+            
+        };
+    }
+}
+
+let card = document.getElementById("dealer-card");
+console.log(card.getBoundingClientRect());
