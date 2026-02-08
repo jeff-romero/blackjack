@@ -9,14 +9,75 @@
         <div id="dealer-space">
             <div class="hand-wrapper" id="dealer-hand">
                 <div class="card" id="dealer-card">
-                    <img src="assets/images/ace-of-hearts-ver_0.2.png"/>
+                    <img src="assets/images/spades/ace-of-spades.png"/>
                 </div>
             </div>
         </div>
         <div id="player-space">
             <div class="hand-wrapper" id="player-hand">
                 <div class="card">
-                    <img src="assets/images/ace-of-hearts-ver_0.2.png"/>
+                    <img class="ace-of-spades" src="assets/images/spades/ace-of-spades.png"/>
+                </div>
+                <div class="card">
+                    <img class="ten-of-hearts" src="assets/images/hearts/10-of-hearts.png"/>
+                </div>
+            </div>
+            <!-- <div class="chip-wrapper">
+                <canvas id="chip1" width="100" height="100"></canvas>
+            </div> -->
+            <div id="controls">
+                <div class="chip-button-wrapper">
+                    <button
+                        class="chip"
+                        id="chip-1"
+                        onclick="">1</button>
+                    <button
+                        class="chip"
+                        id="chip-5"
+                        onclick="">5</button>
+                    <button
+                        class="chip"
+                        id="chip-25"
+                        onclick="">25</button>
+                    <button
+                        class="chip"
+                        id="chip-100"
+                        onclick="">100</button>
+                    <button
+                        class="chip"
+                        id="chip-500"
+                        onclick="">500</button>
+                </div>
+                <div class="player-actions">
+                    <button
+                        class="action"
+                        id="hit"
+                        onclick="">HIT</button>
+                    <button
+                        class="action"
+                        id="stand"
+                        onclick="">STAND</button>
+                    <button
+                        class="action"
+                        id="double-down"
+                        onclick="">DOUBLE DOWN</button>
+                    <button
+                        class="action"
+                        id="split"
+                        onclick="">SPLIT</button>
+                    <button
+                        class="action"
+                        id="fold"
+                        onclick="">FOLD</button>
+                </div>
+                <div class="stacked-button-wrapper">
+                    <button
+                        class="action"
+                        id="all-in">ALL IN</button>
+                    <button
+                        class="action"
+                        id="deal"
+                        onclick="">DEAL</button>
                 </div>
             </div>
         </div>
