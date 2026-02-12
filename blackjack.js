@@ -27,21 +27,36 @@ player clicks deal
 
 const SUITS = ["hearts", "diamonds", "spades", "clubs"];
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Ace", "Jack", "Queen", "King"];
+const MAX_CHIPS = 999999999999;
+const MAX_CHIP_VAL = 500;
 
 
-class Chip {
-    /*
-        values: 1, 5, 25, 50, 100, 500, 1,000
-    */
-    constructor(value=-1) {
-        let val = value;
+class Pot {
+    constructor() {
+        let total = 0;
 
-        this.getChip = function() {
-            return this;
+        this.getPot = function() {
+            return total;
         };
 
-        this.getValue = function() {
-            return val;
+        this.addToPot = function(value=0) {
+            if (value <= 0 || value > MAX_CHIP_VAL || (total + value) > MAX_CHIPS) {
+                return false;
+            }
+
+            total += value;
+
+            return true;
+        };
+
+        this.subtractFromPot = function(value=0) {
+            if (value <= 0 || value > MAX_CHIP_VAL) {
+                return false;
+            }
+
+            total -= value;
+
+            return true;
         };
     }
 }
@@ -185,6 +200,10 @@ class Player extends Hand {
         let chips = [];
         let standing = false; // also used for bust
 
+        this.bet = function(value=0) {
+
+        };
+
         this.hit = function() {
             // take another card
 
@@ -250,136 +269,99 @@ class GameController {
     }
 }
 
-// let card = document.getElementById("dealer-card");
-// console.log(card.getBoundingClientRect());
+
+class Settings {
+    constructor() {
+
+    }
+}
 
 
-// let chip1 = document.getElementById("chip1");
-// let chip1ctx = chip1.getContext("2d");
-// chip1ctx.textAlign = "center";
-// chip1ctx.textBaseline = "middle";
-// chip1ctx.font = "2vw Verdana";
+let gc = new GameController();
 
-// chip1ctx.beginPath();
-// chip1ctx.arc(50, 50, 49, 0, 2 * Math.PI);
-// chip1ctx.strokeStyle = "red";
-// chip1ctx.stroke();
-// chip1ctx.fillStyle = "red";
-// chip1ctx.fill();
-// chip1ctx.closePath();
-
-// chip1ctx.fillStyle = "white";
-// chip1ctx.fillText("5", 50, 50);
+let pot = document.getElementById("pot");
+// console.log(pot.innerText);
 
 
-// let pchip_1 = document.getElementById("pchip-1");
-// let pchip_1_ctx = pchip_1.getContext("2d");
-// pchip_1_ctx.font = "2vw Verdana"
-// pchip_1_ctx.textAlign = "center";
-// pchip_1_ctx.textBaseline = "middle";
+class Chip {
+    constructor(element) {
+        const CHIP_COLORS = {
+            "1": {
+                "mouseover": "lightgrey",
+                "mouseleave": "white",
+                "mousedown": "darkgrey",
+                "mouseup": "lightgrey"
+            },
+            "5": {
+                "mouseover": "#8b1e22",
+                "mouseleave": "#c12e34",
+                "mousedown": "#69171a",
+                "mouseup": "#8b1e22"
+            },
+            "25": {
+                "mouseover": "#287e39",
+                "mouseleave": "#319845",
+                "mousedown": "#1f5f2b",
+                "mouseup": "#287e39"
+            },
+            "100": {
+                "mouseover": "#2b4472",
+                "mouseleave": "#3b5b98",
+                "mousedown": "#22365a",
+                "mouseup": "#2b4472"
+            },
+            "500": {
+                "mouseover": "#202020",
+                "mouseleave": "#303030",
+                "mousedown": "#000000",
+                "mouseup": "#202020"
+            }
+        };
+        const CHIP_VALUES = {
+            "1": 1,
+            "5": 5,
+            "25": 25,
+            "100": 100,
+            "500": 500
+        };
 
-// pchip_1_ctx.strokeStyle = "red";
-// pchip_1_ctx.fillStyle = "red"
-// pchip_1_ctx.beginPath();
-// pchip_1_ctx.arc(50, 50, 49, 0, 2 * Math.PI);
-// pchip_1_ctx.stroke();
-// pchip_1_ctx.fill();
-// pchip_1_ctx.closePath();
+        let chip = element;
+        let chipText = "" + chip.innerText;
+        let value = CHIP_VALUES[chipText];
 
+        chip.addEventListener("mouseover", (e) => {
+            e.target.style.backgroundColor = "" + CHIP_COLORS[chipText]["mouseover"];
+        });
+        chip.addEventListener("mouseleave", (e) => {
+            e.target.style.backgroundColor = CHIP_COLORS[chipText]["mouseleave"];
+        });
+        chip.addEventListener("mousedown", (e) => {
+            e.target.style.backgroundColor = CHIP_COLORS[chipText]["mousedown"];
+        });
+        chip.addEventListener("mouseup", (e) => {
+            e.target.style.backgroundColor = CHIP_COLORS[chipText]["mouseup"];
+        });
 
-let chip1 = document.getElementById("chip-1");
+        this.getChipElement = function() {
+            return chip;
+        };
 
-chip1.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "lightgrey";
-});
+        this.getChip = function() {
+            return this;
+        };
 
-chip1.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "white";
-});
-
-chip1.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "darkgrey";
-});
-
-chip1.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "lightgrey";
-});
-
-
-let chip5 = document.getElementById("chip-5");
-
-chip5.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "#8b1e22";
-});
-
-chip5.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "#c12e34";
-});
-
-chip5.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "#69171a";
-});
-
-chip5.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "#8b1e22";
-});
-
-
-let chip25 = document.getElementById("chip-25");
-
-chip25.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "#287e39";
-});
-
-chip25.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "#319845";
-});
-
-chip25.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "#1f5f2b";
-});
-
-chip25.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "#287e39";
-});
-
-
-let chip100 = document.getElementById("chip-100");
-
-chip100.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "#2b4472";
-});
-
-chip100.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "#3b5b98";
-});
-
-chip100.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "#22365a";
-});
-
-chip100.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "#2b4472";
-});
+        this.getValue = function() {
+            return value;
+        };
+    }
+}
 
 
-let chip500 = document.getElementById("chip-500");
-
-chip500.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "#202020";
-});
-
-chip500.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "#303030";
-});
-
-chip500.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "#000000";
-});
-
-chip500.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "#202020";
-});
+let chip1 = new Chip(document.getElementById("chip-1"));
+let chip5 = new Chip(document.getElementById("chip-5"));
+let chip25 = new Chip(document.getElementById("chip-25"));
+let chip100 = new Chip(document.getElementById("chip-100"));
+let chip500 = new Chip(document.getElementById("chip-500"));
 
 
 let hit = document.getElementById("hit");
