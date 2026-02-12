@@ -2,7 +2,7 @@
 game starts with everyone placing a bet
 dealer deals 1 card face up to each player, then 1 to themselves
 then dealer deals a second card face up to each player, then 1 to themselves face down
-if a player's two cards equal 21, they automatically win and receive a 1.5x-2x payout, that winning player's round ends and waits for other players
+if a player's two cards equal 21 (natural blackjack), they automatically win and receive a 1.5x payout, that winning player's round ends and waits for other players
 otherwise, dealer asks for player action
 player:
     hit - take another card
@@ -12,8 +12,16 @@ player:
     surrender - forfeit half the bet and end the hand immediately. not allowed after splitting.
 there's no limit to how many cards you can have in your hand, but if it's over 21 then bust and gg, lose your bet
 if hand is 17 or higher, should stay
+dealer always stands on 17
 if dealer busts, every player wins the round
 if dealer doesn't bust, only the player(s) with higher hand than dealer win payout
+player win 2x payout
+
+logic:
+have action buttons hidden
+ask player bet (should have min bet when deal button is clicked)
+player clicks chips to add to their bet
+player clicks deal
 */
 
 
@@ -175,6 +183,7 @@ class Player extends Hand {
     constructor() {
         super();
         let chips = [];
+        let standing = false; // also used for bust
 
         this.hit = function() {
             // take another card
@@ -338,38 +347,38 @@ chip25.addEventListener("mouseup", (e) => {
 let chip100 = document.getElementById("chip-100");
 
 chip100.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#2b4472";
 });
 
 chip100.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#3b5b98";
 });
 
 chip100.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#22365a";
 });
 
 chip100.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#2b4472";
 });
 
 
 let chip500 = document.getElementById("chip-500");
 
 chip500.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#202020";
 });
 
 chip500.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#303030";
 });
 
 chip500.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#000000";
 });
 
 chip500.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "";
+    e.target.style.backgroundColor = "#202020";
 });
 
 
