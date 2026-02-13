@@ -295,7 +295,7 @@ class Player extends Hand {
             // take another card
             let drawnCard = shoe.drawCard();
             this.addToHand(drawnCard);
-            updatePlayerHand();
+            updateHand("player-hand");
         };
 
         this.stand = function() {
@@ -355,6 +355,9 @@ class Dealer extends Hand {
         this.dealSelf = function() {
             // pull from shoe
             // add to this hand
+            let drawnCard = shoe.drawCard();
+            this.addToHand(drawnCard);
+            updateHand("dealer-hand");
         };
 
         this.getPlayerChips = function() {
@@ -369,8 +372,12 @@ class Dealer extends Hand {
             return true;
         };
 
-        this.giveChips = function() {
+        this.giveChips = function(value=0) {
+            if (!player.add(value) || !pot.subtract(value)) {
+                return false;
+            }
 
+            return true;
         };
 
         this.fan = function() {
@@ -494,7 +501,7 @@ let chip500 = new Chip(document.getElementById("chip-500"));
 let dealer = new Dealer();
 let player = new Player();
 let pot = new Pot();
-let shoe = new Shoe(1);
+let shoe = new Shoe(2);
 shoe.shuffleShoe(MIN_SHUFFLES);
 // shoe.printShoe();
 let roundStarted = false;
@@ -516,30 +523,47 @@ function fanHand(handWrapper) {
     let offsetX = 0;
 }
 
-function updatePlayerHand() {
-    let playerHand = document.getElementById("player-hand");
+function createVisualCard(card) {
+    let cName = card.getClassName();
+    let cardWrapper = document.createElement("div");
+    cardWrapper.className = "card";
 
-    while (playerHand.firstChild) {
-        playerHand.removeChild(playerHand.firstChild);
+    let viCard = document.createElement("img");
+    viCard.className = cName;
+    let rank = card.getRank();
+    let suit = card.getSuit();
+    viCard.src = "assets/images/" + suit + "/" + rank + "-of-" + suit + ".png";
+
+    cardWrapper.appendChild(viCard);
+
+    return cardWrapper;
+}
+
+function updateHand(handId) {
+    let handWrapper = document.getElementById(handId);
+
+    while (handWrapper.firstChild) {
+        handWrapper.removeChild(handWrapper.firstChild);
     }
 
-    let hand = player.getHand();
-    let splitHand = player.getSplitHand();
+    let hand = undefined;
+    // TODO: splitHand
+    let splitHand = undefined;
+
+    if (handId == "player-hand") {
+        hand = player.getHand();
+        splitHand = player.getSplitHand();
+    }
+    else {
+        hand = dealer.getHand();
+    }
 
     for (let i = 0; i < hand.length; i++) {
         let card = hand[i];
-        let cName = card.getClassName();
 
-        let cardWrapper = document.createElement("div");
-        cardWrapper.className = "card";
-
-        let viCard = document.createElement("img");
-        viCard.className = cName;
-        viCard.src = "assets/images/" + card.getSuit() + "/" + card.getRank() + "-of-" + card.getSuit() + ".png";
-
-        cardWrapper.appendChild(viCard);
-        playerHand.appendChild(cardWrapper);
+        let cardWrapper = createVisualCard(card);
+        handWrapper.appendChild(cardWrapper);
     }
 
-    fanHand(playerHand);
+    fanHand(handWrapper);
 }
