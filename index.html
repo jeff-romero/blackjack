@@ -8,15 +8,72 @@
     <body id="page-wrapper">
         <div id="dealer-space">
             <div class="hand-wrapper" id="dealer-hand">
-                <div class="card">
-                    <img src="assets/images/1-of-hearts-medium.png"/>
+                <div class="card" id="dealer-card">
+                    <img src="assets/images/spades/ace-of-spades.png"/>
                 </div>
             </div>
         </div>
         <div id="player-space">
             <div class="hand-wrapper" id="player-hand">
-                <div class="card">
-                    <img src="assets/images/1-of-hearts-medium.png"/>
+            </div>
+            <div id="counters">
+                <div class="counter">
+                    <p class="counter-value" id="player-chips">0</p>
+                    <p class="counter-caption">PLAYER CHIPS</p>
+                </div>
+                <div class="counter">
+                    <p class="counter-value" id="pot">0</p>
+                    <p class="counter-caption">POT</p>
+                </div>
+            </div>
+            <div id="controls">
+                <div class="chip-button-wrapper">
+                    <button
+                        class="chip"
+                        id="chip-1">1</button>
+                    <button
+                        class="chip"
+                        id="chip-5">5</button>
+                    <button
+                        class="chip"
+                        id="chip-25">25</button>
+                    <button
+                        class="chip"
+                        id="chip-100">100</button>
+                    <button
+                        class="chip"
+                        id="chip-500">500</button>
+                </div>
+                <div class="player-actions">
+                    <button
+                        class="action"
+                        id="hit"
+                        onclick="player.hit()">HIT</button>
+                    <button
+                        class="action"
+                        id="stand"
+                        onclick="">STAND</button>
+                    <button
+                        class="action"
+                        id="double-down"
+                        onclick="player.doubleDown()">DOUBLE DOWN</button>
+                    <button
+                        class="action"
+                        id="split"
+                        onclick="">SPLIT</button>
+                    <button
+                        class="action"
+                        id="fold"
+                        onclick="">FOLD</button>
+                </div>
+                <div class="stacked-button-wrapper">
+                    <button
+                        class="action"
+                        id="all-in">ALL IN</button>
+                    <button
+                        class="action"
+                        id="deal"
+                        onclick="">DEAL</button>
                 </div>
             </div>
         </div>

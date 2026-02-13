@@ -21,12 +21,13 @@
 #dealer-space {
     position: relative;
     display: flex;
-    background-color: purple;
     justify-content: center;
+    background-color: purple;
 }
 
 .hand-wrapper {
     position: relative;
+    display: flex;
     border: 0.1vw solid black;
     border-radius: 0.5vw;
     padding: 2vw;
@@ -40,8 +41,10 @@
 #player-space {
     position: relative;
     display: flex;
-    background-color: blue;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
+    /* background-color: blue; */
 }
 
 .player-hand {
@@ -51,4 +54,141 @@
 .card {
     position: relative;
     display: flex;
+}
+
+.ace-of-spades {
+    display: flex;
+}
+
+.ten-of-hearts {
+    position: absolute;
+    left: -48px;
+}
+
+#counters {
+    position: relative;
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 0.5vw;
+    width: 25%;
+    justify-content: center;
+    gap: 2vw;
+}
+
+.counter {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    /* width: 95%; */
+    /* border: 0.1vw solid white; */
+}
+
+p.counter-value {
+    display: flex;
+    border: 0.1vw solid black;
+    padding: 0.5vw;
+    width: 100%;
+    /* vertical-align: middle; */
+    justify-content: center;
+}
+
+p.counter-caption {
+    display: flex;
+    text-align: center;
+    /* border: 0.1vw solid red; */
+}
+
+#controls {
+    display: flex;
+    width: 100%;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: space-between;
+    gap: 1vw;
+    padding-block: 1vw;
+    padding-inline: 0.5vw;
+}
+
+.chip-button-wrapper {
+    /* flex: 1; */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1vw;
+    /* border: 0.1vw solid red; */
+}
+
+button.chip {
+    /* flex: 1; */
+    flex-shrink: 2;
+    border-radius: 50%;
+    padding: 10px;
+    width: 75px;
+    height: 75px;
+    /* min-width: 25px;
+    max-width: 75px;
+    min-height: 25px;
+    max-height: 75px; */
+}
+
+#chip-1 {
+    border-color: #3b5b98;
+    background-color: white;
+    color: #3b5b98;
+}
+
+#chip-5 {
+    border-color: white;
+    background-color: #c12e34;
+    color: white;
+}
+
+#chip-25 {
+    border-color: white;
+    background-color: #319845;
+    color: white;
+}
+
+#chip-100 {
+    border-color: white;
+    background-color: #3b5b98;
+    color: white;
+}
+
+#chip-500 {
+    border-color: white;
+    background-color: #303030;
+    color: white;
+}
+
+button.action {
+    overflow-wrap: break-word;
+    padding: 1vw;
+    flex: 0.5;
+    border: 0.1vw outset red;
+}
+
+.player-actions {
+    display: flex;
+    /* flex-shrink: 2; */
+    /* flex: 1; */
+    justify-content: space-between;
+    gap: 1vw;
+    /* border: 0.1vw solid red; */
+}
+
+.stacked-button-wrapper {
+    display: flex;
+    /* flex: 1; */
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1vw;
+    /* max-width: fit-content; */
+    /* border: 0.1vw solid red; */
+}
+
+#deal {
+    position: relative;
 }
