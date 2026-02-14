@@ -45,7 +45,7 @@
                     <button
                         class="action"
                         id="hit"
-                        onclick="player.hit()">HIT</button>
+                        onclick="player.action(player.hit())">HIT</button>
                     <button
                         class="action"
                         id="stand"
@@ -53,7 +53,7 @@
                     <button
                         class="action"
                         id="double-down"
-                        onclick="player.doubleDown()">DOUBLE DOWN</button>
+                        onclick="player.action(player.doubleDown())">DOUBLE DOWN</button>
                     <button
                         class="action"
                         id="split"
@@ -66,11 +66,12 @@
                 <div class="stacked-button-wrapper">
                     <button
                         class="action"
-                        id="all-in">ALL IN</button>
+                        id="all-in"
+                        onclick="">ALL IN</button>
                     <button
                         class="action"
                         id="deal"
-                        onclick="">DEAL</button>
+                        onclick="mainloop()">DEAL</button>
                 </div>
             </div>
         </div>

@@ -17,11 +17,21 @@ if dealer busts, every player wins the round
 if dealer doesn't bust, only the player(s) with higher hand than dealer win payout
 player win 2x payout
 
+states:
+get player input
+deal: deal to player(s), then dealer
+get player input
+process input and update values
+redraw board
+
 logic:
 have action buttons hidden
 ask player bet (should have min bet when deal button is clicked)
 player clicks chips to add to their bet
 player clicks deal
+game starts
+show action buttons
+
 */
 
 
@@ -30,6 +40,7 @@ const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "ace", "jack", "que
 const MAX_CHIPS = 999999999999;
 const MAX_CHIP_VAL = 500;
 const MIN_SHUFFLES = 3;
+const MIN_BET = 1;
 
 
 class Pot {
@@ -287,18 +298,23 @@ class Player extends Hand {
             return true;
         };
 
-        this.bet = function(value=0) {
-
-        };
-
         this.hit = function() {
-            // take another card
+            if (!playerTurn) {
+                return false;
+            }
+
             let drawnCard = shoe.drawCard();
             this.addToHand(drawnCard);
             updateHand("player-hand");
+
+            return true;
         };
 
         this.stand = function() {
+            if (!playerTurn) {
+                return false;
+            }
+
             // take no more cards during turn
             if (!standing) {
                 standing = true;
@@ -308,30 +324,80 @@ class Player extends Hand {
         };
 
         this.doubleDown = function() {
+            if (!playerTurn) {
+                return false;
+            }
+
             /*
             increase initial bet by 100% and take one more card. the additional bet is placed next to the original bet.
             */
-           let currentBet = pot.getTotal();
+            let currentBet = pot.getTotal();
 
-           if (!dealer.takeChips(currentBet)) {
-               return false;
-           }
+            if (!dealer.takeChips(currentBet)) {
+                return false;
+            }
 
-           this.hit();
-           updateTotals();
+            this.hit();
+            updateTotals();
+
+            return true;
         };
 
         this.split = function() {
+            if (!playerTurn) {
+                return false;
+            }
 
+
+            return true;
         };
 
         this.fold = function() {
+            if (!playerTurn) {
+                return false;
+            }
 
+
+            return true;
         };
 
         this.cashout = function() {
+            if (!playerTurn) {
+                return false;
+            }
+
             // end the game
             standing = true;
+
+            return true;
+        };
+
+        this.action = (callback) => {
+            if (!playerTurn) {
+                console.log("not player turn!");
+                return false;
+            }
+            if (!callback) {
+                console.log("callback failure");
+                return false;
+            }
+
+            console.log("callback success");
+            playerTurn = false;
+
+            return true;
+        };
+
+        this.waitForAction = (condition, checkInterval=100) => {
+            return new Promise((resolve, reject) => {
+                let interval = setInterval(() => {
+                    if (!condition()) {
+                        return;
+                    }
+                    clearInterval(interval);
+                    resolve("success!");
+                }, checkInterval);
+            });
         };
     }
 }
@@ -346,13 +412,15 @@ class Dealer extends Hand {
         };
 
         this.deal = function() {
-            console.log("deal");
-            // pull from shoe
+            if (!roundStarted) {
+                return false;
+            }
 
-            // add to player hand
+            player.hit();
         };
 
         this.dealSelf = function() {
+
             // pull from shoe
             // add to this hand
             let drawnCard = shoe.drawCard();
@@ -454,7 +522,7 @@ class Chip {
         });
 
         chip.addEventListener("click", (e) => {
-            if (!dealer.takeChips(value)) {
+            if (roundStarted || !dealer.takeChips(value)) {
                 return;
             }
 
@@ -476,21 +544,6 @@ class Chip {
 }
 
 
-let hit = document.getElementById("hit");
-hit.addEventListener("mouseover", (e) => {
-    e.target.style.backgroundColor = "lightgrey";
-});
-hit.addEventListener("mouseleave", (e) => {
-    e.target.style.backgroundColor = "white";
-});
-hit.addEventListener("mousedown", (e) => {
-    e.target.style.backgroundColor = "darkgrey";
-});
-hit.addEventListener("mouseup", (e) => {
-    e.target.style.backgroundColor = "lightgrey";
-});
-
-
 let chip1 = new Chip(document.getElementById("chip-1"));
 let chip5 = new Chip(document.getElementById("chip-5"));
 let chip25 = new Chip(document.getElementById("chip-25"));
@@ -505,6 +558,7 @@ let shoe = new Shoe(2);
 shoe.shuffleShoe(MIN_SHUFFLES);
 // shoe.printShoe();
 let roundStarted = false;
+let playerTurn = false;
 
 
 function updateTotals() {
@@ -567,3 +621,40 @@ function updateHand(handId) {
 
     fanHand(handWrapper);
 }
+
+const fsm = {
+    state: "playerTurn",
+    states: {
+
+    },
+    perform() {
+
+    },
+    changeState(s) {
+
+    }
+};
+
+// TODO: don't use this function anymore
+function mainloop() {
+    if (roundStarted) {
+        return false;
+    }
+
+    roundStarted = true;
+    playerTurn = true;
+    player.hit();
+    setTimeout("dealer.dealSelf()", 1000);
+
+    playerTurn = true;
+}
+
+async function start() {
+    playerTurn = true;
+
+    await player.waitForAction(() => playerTurn == false);
+
+    console.log("player did action!");
+}
+
+start();
