@@ -372,6 +372,16 @@ class Player extends Hand {
             return true;
         };
 
+        this.deal = function() {
+            if (pot.getTotal() < MIN_BET) {
+                return false;
+            }
+
+            roundStarted = true;
+
+            return true;
+        };
+
         this.action = (callback) => {
             if (!playerTurn) {
                 console.log("not player turn!");
@@ -386,18 +396,6 @@ class Player extends Hand {
             playerTurn = false;
 
             return true;
-        };
-
-        this.waitForAction = (condition, checkInterval=100) => {
-            return new Promise((resolve, reject) => {
-                let interval = setInterval(() => {
-                    if (!condition()) {
-                        return;
-                    }
-                    clearInterval(interval);
-                    resolve("success!");
-                }, checkInterval);
-            });
         };
     }
 }
@@ -420,12 +418,13 @@ class Dealer extends Hand {
         };
 
         this.dealSelf = function() {
-
             // pull from shoe
             // add to this hand
             let drawnCard = shoe.drawCard();
             this.addToHand(drawnCard);
             updateHand("dealer-hand");
+
+            playerTurn = true;
         };
 
         this.getPlayerChips = function() {
@@ -622,39 +621,30 @@ function updateHand(handId) {
     fanHand(handWrapper);
 }
 
-const fsm = {
-    state: "playerTurn",
-    states: {
-
-    },
-    perform() {
-
-    },
-    changeState(s) {
-
-    }
+let waitForAction = (condition, ms=100) => {
+    return new Promise((resolve, reject) => {
+        let checkCondition = setInterval(() => {
+            if (!condition()) {
+                return;
+            }
+            clearInterval(checkCondition);
+            resolve("success!");
+        }, ms);
+    });
 };
 
-// TODO: don't use this function anymore
-function mainloop() {
-    if (roundStarted) {
-        return false;
-    }
-
-    roundStarted = true;
-    playerTurn = true;
-    player.hit();
-    setTimeout("dealer.dealSelf()", 1000);
+let start = async () => {
+    roundStarted = false;
+    await waitForAction(() => roundStarted == true);
+    console.log("starting round");
 
     playerTurn = true;
-}
-
-async function start() {
-    playerTurn = true;
-
-    await player.waitForAction(() => playerTurn == false);
+    await waitForAction(() => playerTurn == false);
 
     console.log("player did action!");
+    setTimeout("dealer.dealSelf()", 1000);
+
+    await waitForAction(() => playerTurn == true);
 }
 
 start();
