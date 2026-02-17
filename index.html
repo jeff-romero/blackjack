@@ -8,10 +8,12 @@
     <body id="page-wrapper">
         <div id="dealer-space">
             <div class="hand-wrapper" id="dealer-hand">
+                <div class="dud-card"></div>
             </div>
         </div>
         <div id="player-space">
             <div class="hand-wrapper" id="player-hand">
+                <div class="dud-card"></div>
             </div>
             <div id="counters">
                 <div class="counter">
@@ -24,7 +26,7 @@
                 </div>
             </div>
             <div id="controls">
-                <div class="chip-button-wrapper">
+                <div id="chip-button-wrapper">
                     <button
                         class="chip"
                         id="chip-1">1</button>
@@ -41,7 +43,7 @@
                         class="chip"
                         id="chip-500">500</button>
                 </div>
-                <div class="player-actions">
+                <div id="player-actions">
                     <button
                         class="action"
                         id="hit"
@@ -66,12 +68,11 @@
                 <div class="stacked-button-wrapper">
                     <button
                         class="action"
-                        id="all-in"
-                        onclick="">ALL IN</button>
+                        id="all-in">ALL IN</button>
                     <button
                         class="action"
                         id="deal"
-                        onclick="player.action(player.deal())">DEAL</button>
+                        onclick="player.deal()">DEAL</button>
                 </div>
             </div>
         </div>
