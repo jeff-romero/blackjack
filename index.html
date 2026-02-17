@@ -8,13 +8,12 @@
     <body id="page-wrapper">
         <div id="dealer-space">
             <div class="hand-wrapper" id="dealer-hand">
-                <div class="card" id="dealer-card">
-                    <img src="assets/images/spades/ace-of-spades.png"/>
-                </div>
+                <div class="dud-card"></div>
             </div>
         </div>
         <div id="player-space">
             <div class="hand-wrapper" id="player-hand">
+                <div class="dud-card"></div>
             </div>
             <div id="counters">
                 <div class="counter">
@@ -27,7 +26,7 @@
                 </div>
             </div>
             <div id="controls">
-                <div class="chip-button-wrapper">
+                <div id="chip-button-wrapper">
                     <button
                         class="chip"
                         id="chip-1">1</button>
@@ -44,11 +43,11 @@
                         class="chip"
                         id="chip-500">500</button>
                 </div>
-                <div class="player-actions">
+                <div id="player-actions">
                     <button
                         class="action"
                         id="hit"
-                        onclick="player.hit()">HIT</button>
+                        onclick="player.action(player.hit())">HIT</button>
                     <button
                         class="action"
                         id="stand"
@@ -56,7 +55,7 @@
                     <button
                         class="action"
                         id="double-down"
-                        onclick="player.doubleDown()">DOUBLE DOWN</button>
+                        onclick="player.action(player.doubleDown())">DOUBLE DOWN</button>
                     <button
                         class="action"
                         id="split"
@@ -73,7 +72,7 @@
                     <button
                         class="action"
                         id="deal"
-                        onclick="">DEAL</button>
+                        onclick="player.deal()">DEAL</button>
                 </div>
             </div>
         </div>
