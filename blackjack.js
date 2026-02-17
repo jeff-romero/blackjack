@@ -41,6 +41,11 @@ const MAX_CHIPS = 999999999999;
 const MAX_CHIP_VAL = 500;
 const MIN_SHUFFLES = 3;
 const MIN_BET = 1;
+const DEFAULT_CHECK_INTERVAL = 100;
+
+
+let playerChips = document.getElementById("chip-button-wrapper");
+let playerActions = document.getElementById("player-actions");
 
 
 class Pot {
@@ -372,10 +377,45 @@ class Player extends Hand {
             return true;
         };
 
-        this.deal = function() {
+        this.removePlayerChipBtns = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
+            setTimeout(() => {
+                playerChips.style.display = "none";
+            }, 1000);
+
+            return new Promise((resolve, reject) => {
+                let checkCondition = setInterval(() => {
+                    if (!condition()) {
+                        return;
+                    }
+                    clearInterval(checkCondition);
+                    resolve("removed player chip buttons");
+                }, ms);
+            });
+        };
+
+        this.addPlayerActionBtns = function() {
+            playerActions.style.display = "flex";
+            playerActions.style.animationPlayState = "running";
+        };
+
+        this.removeAllInBtn = function() {
+            allIn.style.animationPlayState = "running";
+            setTimeout(() => {
+                allIn.style.display = "none"
+            }, 500);
+        };
+
+        this.deal = async () => {
             if (pot.getTotal() < MIN_BET) {
                 return false;
             }
+
+            playerChips.style.animationPlayState = "running";
+            // wait for the animation to finish
+            await this.removePlayerChipBtns(() => playerChips.style.display == "none");
+
+            this.addPlayerActionBtns();
+            this.removeAllInBtn();
 
             roundStarted = true;
 
@@ -383,7 +423,7 @@ class Player extends Hand {
         };
 
         this.action = (callback) => {
-            if (!playerTurn) {
+            if (!playerTurn && roundStarted) {
                 console.log("not player turn!");
                 return false;
             }
@@ -405,7 +445,7 @@ class Dealer extends Hand {
     constructor() {
         super();
 
-        this.start = function() {
+        this.winCheck = function() {
 
         };
 
@@ -418,8 +458,6 @@ class Dealer extends Hand {
         };
 
         this.dealSelf = function() {
-            // pull from shoe
-            // add to this hand
             let drawnCard = shoe.drawCard();
             this.addToHand(drawnCard);
             updateHand("dealer-hand");
@@ -445,10 +483,6 @@ class Dealer extends Hand {
             }
 
             return true;
-        };
-
-        this.fan = function() {
-
         };
     }
 }
@@ -543,19 +577,11 @@ class Chip {
 }
 
 
-let chip1 = new Chip(document.getElementById("chip-1"));
-let chip5 = new Chip(document.getElementById("chip-5"));
-let chip25 = new Chip(document.getElementById("chip-25"));
-let chip100 = new Chip(document.getElementById("chip-100"));
-let chip500 = new Chip(document.getElementById("chip-500"));
-
-
 let dealer = new Dealer();
 let player = new Player();
 let pot = new Pot();
 let shoe = new Shoe(2);
 shoe.shuffleShoe(MIN_SHUFFLES);
-// shoe.printShoe();
 let roundStarted = false;
 let playerTurn = false;
 
@@ -621,7 +647,11 @@ function updateHand(handId) {
     fanHand(handWrapper);
 }
 
-let waitForAction = (condition, ms=100) => {
+let winCheck = () => {
+
+}
+
+let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
     return new Promise((resolve, reject) => {
         let checkCondition = setInterval(() => {
             if (!condition()) {
@@ -635,16 +665,53 @@ let waitForAction = (condition, ms=100) => {
 
 let start = async () => {
     roundStarted = false;
+
+    // wait for player bet
     await waitForAction(() => roundStarted == true);
     console.log("starting round");
 
+    // round start
+    // deal to player and dealer
     playerTurn = true;
-    await waitForAction(() => playerTurn == false);
+    setTimeout(player.action(player.hit()), 1500);
+    // check if player win
 
-    console.log("player did action!");
+
     setTimeout("dealer.dealSelf()", 1000);
+    
 
-    await waitForAction(() => playerTurn == true);
+    let i = 0;
+    while (i < 5) {
+        // player action
+        playerTurn = true;
+        await waitForAction(() => playerTurn == false);
+        console.log("player did action!");
+
+        // dealer response
+        setTimeout("dealer.dealSelf()", 1000);
+        await waitForAction(() => playerTurn == true);
+
+        i += 1;
+    }
+    console.log("done");
 }
+
+let chip1 = new Chip(document.getElementById("chip-1"));
+let chip5 = new Chip(document.getElementById("chip-5"));
+let chip25 = new Chip(document.getElementById("chip-25"));
+let chip100 = new Chip(document.getElementById("chip-100"));
+let chip500 = new Chip(document.getElementById("chip-500"));
+
+let allIn = document.getElementById("all-in");
+
+allIn.addEventListener("click", () => {
+    if (roundStarted || !dealer.takeChips(player.getChips())) {
+        return;
+    }
+
+    updateTotals();
+    player.deal();
+});
+
 
 start();
