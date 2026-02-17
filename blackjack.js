@@ -41,6 +41,9 @@ const MAX_CHIPS = 999999999999;
 const MAX_CHIP_VAL = 500;
 const MIN_SHUFFLES = 3;
 const MIN_BET = 1;
+const WIN_THRESHOLD = 21;
+const ACE_HIGH = 11;
+const ACE_LOW = 1;
 const DEFAULT_CHECK_INTERVAL = 100;
 
 
@@ -97,6 +100,21 @@ class Card {
             "queen": "queen",
             "king": "king"
         };
+        const VALUE_MAP = {
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "5": 5,
+            "6": 6,
+            "7": 7,
+            "8": 8,
+            "9": 9,
+            "10": 10,
+            "ace": ACE_LOW,
+            "jack": 10,
+            "queen": 10,
+            "king": 10
+        };
 
         let s = suit;
         let r = rank;
@@ -111,6 +129,10 @@ class Card {
 
         this.getRank = function() {
             return r;
+        };
+
+        this.getValue = function() {
+            return VALUE_MAP[this.getRank()];
         };
 
         this.printCard = function() {
@@ -250,6 +272,40 @@ class Hand {
             splitHand.push(card);
         };
 
+        this.getHandTotal = function(hand=this.getHand()) {
+            let total = 0;
+            let aces = 0;
+
+            for (let i = 0; i < hand.length; i++) {
+                let card = hand[i];
+                let value = card.getValue();
+
+                // add aces to total later
+                if (value == ACE_LOW) {
+                    aces += 1;
+                    continue;
+                }
+                total += value;
+            }
+
+            // add aces to total
+            while (aces > 0) {
+                if ((total + ACE_HIGH) <= WIN_THRESHOLD) {
+                    total += ACE_HIGH;
+                }
+                else {
+                    total += ACE_LOW;
+                }
+                aces -= 1;
+            }
+
+            return total;
+        };
+
+        this.getSplitHandTotal = function() {
+            return this.getHandTotal(this.getSplitHand());
+        };
+
         this.fan = function() {
             /*
                 iterate through each card in the hand and modify the position to a fan
@@ -310,9 +366,20 @@ class Player extends Hand {
 
             let drawnCard = shoe.drawCard();
             this.addToHand(drawnCard);
-            updateHand("player-hand");
 
             return true;
+        };
+
+        this.isStanding = function() {
+            return standing;
+        };
+
+        this.unstand = function() {
+            // should not be accessible via player ui
+
+            if (standing) {
+                standing = false;
+            }
         };
 
         this.stand = function() {
@@ -343,7 +410,6 @@ class Player extends Hand {
             }
 
             this.hit();
-            updateTotals();
 
             return true;
         };
@@ -358,10 +424,16 @@ class Player extends Hand {
         };
 
         this.fold = function() {
-            if (!playerTurn) {
-                return false;
+            // if (!playerTurn) {
+            //     return false;
+            // }
+
+            let hand = this.getHand();
+            while (hand.length > 0) {
+                hand.pop();
             }
 
+            console.log(this.getHand().length);
 
             return true;
         };
@@ -433,9 +505,24 @@ class Player extends Hand {
             }
 
             console.log("callback success");
+            updateHand("player-hand");
+            updateTotals();
             playerTurn = false;
 
             return true;
+        };
+
+        this.wonHand = function(hand=this.getHand()) {
+            let handTotal = hand.getHandTotal();
+            if (handTotal > WIN_THRESHOLD) {
+                return false;
+            }
+
+            return true;
+        };
+
+        this.wonSplitHand = function() {
+            return this.wonHand(this.getSplitHand());
         };
     }
 }
@@ -637,6 +724,10 @@ function updateHand(handId) {
         hand = dealer.getHand();
     }
 
+    if (hand.length == 0) {
+        return;
+    }
+
     for (let i = 0; i < hand.length; i++) {
         let card = hand[i];
 
@@ -645,10 +736,6 @@ function updateHand(handId) {
     }
 
     fanHand(handWrapper);
-}
-
-let winCheck = () => {
-
 }
 
 let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
@@ -673,25 +760,34 @@ let start = async () => {
     // round start
     // deal to player and dealer
     playerTurn = true;
-    setTimeout(player.action(player.hit()), 1500);
-    // check if player win
-
+    // setTimeout("player.action(player.hit())", 1000);
+    player.action(player.hit());
 
     setTimeout("dealer.dealSelf()", 1000);
-    
 
-    let i = 0;
-    while (i < 5) {
+    let turn = 0;
+    while (turn < 5) {
         // player action
         playerTurn = true;
         await waitForAction(() => playerTurn == false);
         console.log("player did action!");
 
+        // check for fold or stand
+        if (player.getHand().length == 0) {
+
+        }
+
+        // check for player blackjack
+
+
         // dealer response
         setTimeout("dealer.dealSelf()", 1000);
         await waitForAction(() => playerTurn == true);
 
-        i += 1;
+        // check for dealer blackjack
+
+
+        turn += 1;
     }
     console.log("done");
 }
