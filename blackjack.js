@@ -42,6 +42,7 @@ const MAX_CHIP_VAL = 500;
 const MIN_SHUFFLES = 3;
 const MIN_BET = 1;
 const WIN_THRESHOLD = 21;
+const HARD_STAND_THRESHOLD = 17;
 const ACE_HIGH = 11;
 const ACE_LOW = 1;
 const DEFAULT_CHECK_INTERVAL = 100;
@@ -255,6 +256,7 @@ class Hand {
     constructor() {
         let hand = [];
         let splitHand = [];
+        let standing = false;
 
         this.getHand = function() {
             return hand;
@@ -273,6 +275,7 @@ class Hand {
         };
 
         this.getHandTotal = function(hand=this.getHand()) {
+            console.log(hand);
             let total = 0;
             let aces = 0;
 
@@ -306,6 +309,36 @@ class Hand {
             return this.getHandTotal(this.getSplitHand());
         };
 
+        this.printHandTotal = function(hand=this.getHand()) {
+            console.log("total: ", this.getHandTotal(hand));
+        };
+
+        this.printSplitHandTotal = function() {
+            this.printHandTotal(this.getSplitHand());
+        };
+
+        this.isBust = function() {
+            return (this.getHandTotal() > WIN_THRESHOLD);
+        };
+
+        this.isStanding = function() {
+            return standing;
+        };
+
+        this.unstand = function() {
+            if (standing) {
+                standing = false;
+            }
+        };
+
+        this.stand = function() {
+            // take no more cards during turn
+            if (!standing) {
+                standing = true;
+            }
+            return true;
+        };
+
         this.fan = function() {
             /*
                 iterate through each card in the hand and modify the position to a fan
@@ -333,7 +366,7 @@ class Player extends Hand {
         let total = STARTING_CHIPS;
         let chips = document.getElementById("player-chips");
         chips.innerText = total;
-        let standing = false; // also used for bust
+        let folded = false;
 
         this.getChips = function() {
             return total;
@@ -370,31 +403,6 @@ class Player extends Hand {
             return true;
         };
 
-        this.isStanding = function() {
-            return standing;
-        };
-
-        this.unstand = function() {
-            // should not be accessible via player ui
-
-            if (standing) {
-                standing = false;
-            }
-        };
-
-        this.stand = function() {
-            if (!playerTurn) {
-                return false;
-            }
-
-            // take no more cards during turn
-            if (!standing) {
-                standing = true;
-            }
-
-            return true;
-        };
-
         this.doubleDown = function() {
             if (!playerTurn) {
                 return false;
@@ -423,17 +431,32 @@ class Player extends Hand {
             return true;
         };
 
+        this.hasFolded = function() {
+            if (folded) {
+                return true;
+            }
+
+            return false;
+        };
+
+        this.unfold = function() {
+            if (folded) {
+                folded = false;
+            }
+        };
+
         this.fold = function() {
-            // if (!playerTurn) {
-            //     return false;
-            // }
+            // forfeit all cards to dealer and lose bet
+            if (!playerTurn) {
+                return false;
+            }
 
             let hand = this.getHand();
             while (hand.length > 0) {
                 hand.pop();
             }
 
-            console.log(this.getHand().length);
+            folded = true;
 
             return true;
         };
@@ -508,6 +531,7 @@ class Player extends Hand {
             updateHand("player-hand");
             updateTotals();
             playerTurn = false;
+            dealerTurn = true;
 
             return true;
         };
@@ -549,7 +573,9 @@ class Dealer extends Hand {
             this.addToHand(drawnCard);
             updateHand("dealer-hand");
 
+            dealerTurn = false;
             playerTurn = true;
+            return true;
         };
 
         this.getPlayerChips = function() {
@@ -671,6 +697,7 @@ let shoe = new Shoe(2);
 shoe.shuffleShoe(MIN_SHUFFLES);
 let roundStarted = false;
 let playerTurn = false;
+let dealerTurn = false;
 
 
 function updateTotals() {
@@ -758,35 +785,127 @@ let start = async () => {
     console.log("starting round");
 
     // round start
-    // deal to player and dealer
-    playerTurn = true;
-    // setTimeout("player.action(player.hit())", 1000);
-    player.action(player.hit());
+    // initial deal to player and dealer
+    for (let i = 0; i < 2; i++) {
+        playerTurn = true;
+        setTimeout("player.action(player.hit())", 1000);
+        await waitForAction(() => playerTurn == false);
 
-    setTimeout("dealer.dealSelf()", 1000);
+        // TODO : deal first card face down
+        setTimeout("dealer.dealSelf()", 1000);
+        await waitForAction(() => dealerTurn == false);
+    }
+    player.printHandTotal();
+    dealer.printHandTotal();
 
+    pTotal = player.getHandTotal();
+    while (!player.isBust() && !player.isStanding() && pTotal != WIN_THRESHOLD) {
+        playerTurn = true;
+        await waitForAction(() => playerTurn == false);
+        console.log("player did action");
+        pTotal = player.getHandTotal();
+    }
+
+    if (pTotal == WIN_THRESHOLD && player.getHand().length == 2) {
+        console.log("player hit natural blackjack!");
+    }
+
+    dTotal = dealer.getHandTotal();
+    while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
+        dealerTurn = true;
+        setTimeout("dealer.dealSelf()", 1000);
+        await waitForAction(() => dealerTurn == false);
+        dTotal = dealer.getHandTotal();
+        dealer.printHandTotal();
+    }
+
+    if (dTotal == WIN_THRESHOLD) {
+        console.log("dealer hit blackjack!");
+    }
+
+    /*
+        if the dealer busts, all players who haven't bust win
+        if the dealer doesn't bust, the players who's hand is higher than the dealer wins
+        loses if lower than dealer
+        if both dealer and player has blackjack (push), then it's a draw and the bets
+        are returned
+    */
+
+    if (dealer.isBust()) {
+        if (!player.isBust()) {
+            console.log("dealer bust so player wins!");
+        }
+        else {
+            console.log("both dealer and player bust!");
+        }
+    }
+    else {
+        if (pTotal > dTotal) {
+            console.log("player has the higher hand!");
+            // payout 1:1
+        }
+        else if (pTotal == dTotal) {
+            console.log("push!");
+            if (pTotal == WIN_THRESHOLD) {
+                // payout 3:2
+            }
+            else {
+                // return player bet
+            }
+        }
+        else {
+            console.log("house wins!");
+        }
+    }
+
+    return;
     let turn = 0;
-    while (turn < 5) {
+    while (roundStarted && turn < 5) { // TODO: replace with !player.hasFolded()
         // player action
         playerTurn = true;
         await waitForAction(() => playerTurn == false);
         console.log("player did action!");
 
-        // check for fold or stand
-        if (player.getHand().length == 0) {
+        let pTotal = player.getHandTotal();
 
+        if (!player.isBust() || !player.isStanding() || !player.hasFolded()) {
+            player.printHandTotal();
+
+            // check for player blackjack
+            if (pTotal == WIN_THRESHOLD) {
+                console.log("player blackjack!");
+            }
+            else {
+                console.log("no player blackjack during this turn");
+            }
         }
 
-        // check for player blackjack
+        let dTotal = dealer.getHandTotal();
 
+        //  && (!player.isStanding() && dTotal < pTotal)
+        while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD) {
+            dealerTurn = true;
+            console.log("dealer total: ", dTotal);
+            // dealer response must happen regardless of player fold/stand/bust
+            setTimeout("dealer.dealSelf()", 1000);
+            await waitForAction(() => dealerTurn == false);
+            dealer.printHandTotal();
 
-        // dealer response
-        setTimeout("dealer.dealSelf()", 1000);
-        await waitForAction(() => playerTurn == true);
+            dTotal = dealer.getHandTotal();
 
-        // check for dealer blackjack
+            // check for dealer blackjack
+            if (dTotal == WIN_THRESHOLD) {
+                console.log("dealer blackjack!");
+                break;
+            }
+        }
+        console.log("no dealer blackjack during this turn");
 
+        // compare dealer and player hand
+        if (pTotal > dTotal) {
+            // player win - 2x payout
 
+        }
         turn += 1;
     }
     console.log("done");
@@ -811,3 +930,6 @@ allIn.addEventListener("click", () => {
 
 
 start();
+
+// TODO: include player and dealer totals
+// TODO: remove split after drawing more than the 2 cards in the initial hand
