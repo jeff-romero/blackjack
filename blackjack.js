@@ -1,39 +1,3 @@
-/*
-game starts with everyone placing a bet
-dealer deals 1 card face up to each player, then 1 to themselves
-then dealer deals a second card face up to each player, then 1 to themselves face down
-if a player's two cards equal 21 (natural blackjack), they automatically win and receive a 1.5x payout, that winning player's round ends and waits for other players
-otherwise, dealer asks for player action
-player:
-    hit - take another card
-    stand/stay - take no more cards
-    double down - increase initial bet by 100% and take one more card. the additional bet is placed next to the original bet.
-    split - create two hands from a starting hand where both cards have the same value. each new hand gets a second card resulting in two starting hands. this requires an additional bet on the second hand. the two hands are played out independently, and the wager on each hand is won or lost independently.
-    surrender - forfeit half the bet and end the hand immediately. not allowed after splitting.
-there's no limit to how many cards you can have in your hand, but if it's over 21 then bust and gg, lose your bet
-if hand is 17 or higher, should stay
-dealer always stands on 17
-if dealer busts, every player wins the round
-if dealer doesn't bust, only the player(s) with higher hand than dealer win payout
-player win 2x payout
-
-states:
-get player input
-deal: deal to player(s), then dealer
-get player input
-process input and update values
-redraw board
-
-logic:
-have action buttons hidden
-ask player bet (should have min bet when deal button is clicked)
-player clicks chips to add to their bet
-player clicks deal
-game starts
-show action buttons
-
-*/
-
 
 const SUITS = ["hearts", "diamonds", "spades", "clubs"];
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "ace", "jack", "queen", "king"];
@@ -46,10 +10,6 @@ const HARD_STAND_THRESHOLD = 17;
 const ACE_HIGH = 11;
 const ACE_LOW = 1;
 const DEFAULT_CHECK_INTERVAL = 100;
-
-
-let playerChips = document.getElementById("chip-button-wrapper");
-let playerActions = document.getElementById("player-actions");
 
 
 class Pot {
@@ -220,6 +180,7 @@ class Shoe {
         };
 
         this.shuffleShoe = function(shuffles=1) {
+            // fisher-yates shuffle algorithm
             for (let _ = 0; _ < shuffles; _++) {
                 let max = shoe.length - 1;
                 for (let i = shoe.length - 1; i > 0; i--) {
@@ -237,10 +198,7 @@ class Shoe {
                 return false;
             }
 
-            let card = shoe.shift();
-            // card.printCard();
-
-            return card;
+            return shoe.shift();
         };
 
         this.printShoe = function() {
@@ -403,6 +361,17 @@ class Player extends Hand {
             return true;
         };
 
+        this.hitSplitHand = function() {
+            if (!playerTurn) {
+
+            }
+
+            let drawnCard = shoe.drawCard();
+            this.addToSplitHand(drawnCard);
+
+            return true;
+        };
+
         this.doubleDown = function() {
             if (!playerTurn) {
                 return false;
@@ -422,13 +391,40 @@ class Player extends Hand {
             return true;
         };
 
-        this.split = function() {
+        this.doubleDownOnSplit = function() {
             if (!playerTurn) {
+
+            }
+
+            // TODO: update this
+            let currentBet = undefined;
+
+            if (!dealer.takeChips(currentBet)) {
                 return false;
             }
 
+            this.hitSplitHand();
 
             return true;
+        };
+
+        this.split = function() {
+            if (!playerTurn || this.getHand().length > 2) {
+                return false;
+            }
+            /*
+            split can only happen with the initial 2 card hand,
+            so the index hard code is okay
+            */
+            let hand = this.getHand();
+            if (hand[0].getRank() != hand[1].getRank()) {
+                return false;
+            }
+
+            let secondCard = hand.pop();
+            this.getSplitHand().push(secondCard());
+
+            return false;
         };
 
         this.hasFolded = function() {
@@ -456,6 +452,7 @@ class Player extends Hand {
                 hand.pop();
             }
 
+            pot.subtract(pot.getTotal());
             folded = true;
 
             return true;
@@ -473,6 +470,8 @@ class Player extends Hand {
         };
 
         this.removePlayerChipBtns = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
+            let playerChips = document.getElementById("chip-button-wrapper");
+
             setTimeout(() => {
                 playerChips.style.display = "none";
             }, 1000);
@@ -489,6 +488,8 @@ class Player extends Hand {
         };
 
         this.addPlayerActionBtns = function() {
+            let playerActions = document.getElementById("player-actions");
+
             playerActions.style.display = "flex";
             playerActions.style.animationPlayState = "running";
         };
@@ -501,16 +502,17 @@ class Player extends Hand {
         };
 
         this.deal = async () => {
-            if (pot.getTotal() < MIN_BET) {
+            if (roundStarted || pot.getTotal() < MIN_BET) {
                 return false;
             }
 
-            playerChips.style.animationPlayState = "running";
+            // let playerChips = document.getElementById("chip-button-wrapper");
+            // playerChips.style.animationPlayState = "running";
             // wait for the animation to finish
-            await this.removePlayerChipBtns(() => playerChips.style.display == "none");
+            // await this.removePlayerChipBtns(() => playerChips.style.display == "none");
 
-            this.addPlayerActionBtns();
-            this.removeAllInBtn();
+            // this.addPlayerActionBtns();
+            // this.removeAllInBtn();
 
             roundStarted = true;
 
@@ -518,11 +520,15 @@ class Player extends Hand {
         };
 
         this.action = (callback) => {
-            if (!playerTurn && roundStarted) {
+            if (!roundStarted) {
+                console.log("round hasn't started!");
+                return false;
+            }
+            else if (!playerTurn) {
                 console.log("not player turn!");
                 return false;
             }
-            if (!callback) {
+            else if (!callback) {
                 console.log("callback failure");
                 return false;
             }
@@ -556,10 +562,6 @@ class Dealer extends Hand {
     constructor() {
         super();
 
-        this.winCheck = function() {
-
-        };
-
         this.deal = function() {
             if (!roundStarted) {
                 return false;
@@ -591,7 +593,7 @@ class Dealer extends Hand {
         };
 
         this.giveChips = function(value=0) {
-            if (!player.add(value) || !pot.subtract(value)) {
+            if (!player.add(value)) {
                 return false;
             }
 
@@ -765,6 +767,69 @@ function updateHand(handId) {
     fanHand(handWrapper);
 }
 
+function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
+    let potTotal = pot.getTotal();
+    pot.subtract(potTotal);
+
+    if (dealer.isBust()) {
+        if (!player.isBust()) {
+            console.log("dealer bust so player wins!");
+            // 1:1 payout
+            dealer.giveChips(potTotal * 2);
+        }
+        else {
+            console.log("both dealer and player bust!");
+        }
+    }
+    else {
+        if (player.isBust() || pTotal < dTotal) {
+            console.log("dealer wins!");
+        }
+        else if (pTotal > dTotal) {
+            console.log("player has the higher hand!");
+            if (pTotal == WIN_THRESHOLD) {
+                // 3:2 payout (for every 2 chips, player will get 3 in return)
+                let wager = potTotal;
+                let halfOfWager = (wager / 2).toFixed(2);
+
+                // TODO: check
+                console.log("payout: ", (wager + halfOfWager));
+                dealer.giveChips(wager + halfOfWager);
+            }
+            else {
+                // 1:1 payout
+                dealer.giveChips(potTotal * 2);
+            }
+        }
+        else if (pTotal == dTotal) {
+            if (pTotal == WIN_THRESHOLD) {
+                console.log("push with blackjack!");
+                // payout 3:2
+                let wager = potTotal;
+                let halfOfWager = (wager / 2).toFixed(2);
+                dealer.giveChips(wager + halfOfWager);
+            }
+            else {
+                console.log("push!");
+                // return player bet
+                dealer.giveChips(potTotal);
+            }
+        }
+    }
+    updateTotals();
+}
+
+function togglePlayAgain() {
+    let playAgainPopup = document.getElementById("play-again-popup");
+
+    if (playAgainPopup.style.display == "flex") {
+        playAgainPopup.style.display == "none";
+    }
+    else {
+        playAgainPopup.style.display = "flex";
+    }
+}
+
 let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
     return new Promise((resolve, reject) => {
         let checkCondition = setInterval(() => {
@@ -779,6 +844,10 @@ let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
 
 let start = async () => {
     roundStarted = false;
+    playerTurn = false;
+    dealerTurn = false;
+
+    // TODO: include player and dealer totals
 
     // wait for player bet
     await waitForAction(() => roundStarted == true);
@@ -791,124 +860,71 @@ let start = async () => {
         setTimeout("player.action(player.hit())", 1000);
         await waitForAction(() => playerTurn == false);
 
-        // TODO : deal first card face down
+        // TODO: deal first card face down
         setTimeout("dealer.dealSelf()", 1000);
         await waitForAction(() => dealerTurn == false);
     }
-    player.printHandTotal();
-    dealer.printHandTotal();
 
-    pTotal = player.getHandTotal();
-    while (!player.isBust() && !player.isStanding() && pTotal != WIN_THRESHOLD) {
+    let pTotal = player.getHandTotal();
+    while (!player.isBust() && !player.hasFolded() && !player.isStanding() && pTotal != WIN_THRESHOLD) {
         playerTurn = true;
         await waitForAction(() => playerTurn == false);
         console.log("player did action");
         pTotal = player.getHandTotal();
+        player.printHandTotal();
     }
 
-    if (pTotal == WIN_THRESHOLD && player.getHand().length == 2) {
-        console.log("player hit natural blackjack!");
-    }
-
-    dTotal = dealer.getHandTotal();
-    while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
-        dealerTurn = true;
-        setTimeout("dealer.dealSelf()", 1000);
-        await waitForAction(() => dealerTurn == false);
-        dTotal = dealer.getHandTotal();
-        dealer.printHandTotal();
-    }
-
-    if (dTotal == WIN_THRESHOLD) {
-        console.log("dealer hit blackjack!");
-    }
-
-    /*
-        if the dealer busts, all players who haven't bust win
-        if the dealer doesn't bust, the players who's hand is higher than the dealer wins
-        loses if lower than dealer
-        if both dealer and player has blackjack (push), then it's a draw and the bets
-        are returned
-    */
-
-    if (dealer.isBust()) {
-        if (!player.isBust()) {
-            console.log("dealer bust so player wins!");
-        }
-        else {
-            console.log("both dealer and player bust!");
-        }
-    }
-    else {
-        if (pTotal > dTotal) {
-            console.log("player has the higher hand!");
-            // payout 1:1
-        }
-        else if (pTotal == dTotal) {
-            console.log("push!");
-            if (pTotal == WIN_THRESHOLD) {
-                // payout 3:2
-            }
-            else {
-                // return player bet
-            }
-        }
-        else {
-            console.log("house wins!");
-        }
-    }
-
-    return;
-    let turn = 0;
-    while (roundStarted && turn < 5) { // TODO: replace with !player.hasFolded()
-        // player action
-        playerTurn = true;
-        await waitForAction(() => playerTurn == false);
-        console.log("player did action!");
-
-        let pTotal = player.getHandTotal();
-
-        if (!player.isBust() || !player.isStanding() || !player.hasFolded()) {
-            player.printHandTotal();
-
-            // check for player blackjack
-            if (pTotal == WIN_THRESHOLD) {
-                console.log("player blackjack!");
-            }
-            else {
-                console.log("no player blackjack during this turn");
-            }
+    if (!player.hasFolded()) {
+        if (pTotal == WIN_THRESHOLD && player.getHand().length == 2) {
+            console.log("player hit natural blackjack!");
         }
 
         let dTotal = dealer.getHandTotal();
-
-        //  && (!player.isStanding() && dTotal < pTotal)
-        while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD) {
+        while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
             dealerTurn = true;
-            console.log("dealer total: ", dTotal);
-            // dealer response must happen regardless of player fold/stand/bust
             setTimeout("dealer.dealSelf()", 1000);
             await waitForAction(() => dealerTurn == false);
-            dealer.printHandTotal();
-
             dTotal = dealer.getHandTotal();
-
-            // check for dealer blackjack
-            if (dTotal == WIN_THRESHOLD) {
-                console.log("dealer blackjack!");
-                break;
-            }
+            dealer.printHandTotal();
         }
-        console.log("no dealer blackjack during this turn");
 
-        // compare dealer and player hand
-        if (pTotal > dTotal) {
-            // player win - 2x payout
-
+        if (dTotal == WIN_THRESHOLD) {
+            console.log("dealer hit blackjack!");
         }
-        turn += 1;
+
+        winCheck(pTotal, dTotal);
     }
-    console.log("done");
+
+    let finishCleanup = false;
+    // discard cards
+    setTimeout(() => {
+        let dealerHand = document.getElementById("dealer-hand");
+        let playerHand = document.getElementById("player-hand");
+
+        while (dealerHand.firstChild) {
+            dealerHand.removeChild(dealerHand.firstChild);
+        }
+
+        while (playerHand.firstChild) {
+            playerHand.removeChild(playerHand.firstChild);
+        }
+
+        let dudCard = document.createElement("div");
+        dudCard.className = "dud-card";
+        dealerHand.appendChild(dudCard);
+
+        dudCard = document.createElement("div");
+        dudCard.className = "dud-card";
+        playerHand.appendChild(dudCard);
+
+        finishCleanup = true;
+    }, 5000);
+
+    await waitForAction(() => finishCleanup == true);
+
+    console.log("ready to start a new round");
+
+    // get input of whether to start a new round (cashout/play again) force cashout if pchips are 0
 }
 
 let chip1 = new Chip(document.getElementById("chip-1"));
@@ -930,6 +946,3 @@ allIn.addEventListener("click", () => {
 
 
 start();
-
-// TODO: include player and dealer totals
-// TODO: remove split after drawing more than the 2 cards in the initial hand
