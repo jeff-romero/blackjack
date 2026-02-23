@@ -186,16 +186,16 @@ button.action {
 
 #player-actions {
     position: relative;
-    display: none;
+    display: flex;
     /* flex-shrink: 2; */
     /* flex: 1; */
     justify-content: space-between;
     gap: 1vw;
     /* border: 0.1vw solid red; */
-    animation-name: toggleActionBtns;
+    /* animation-name: toggleActionBtns;
     animation-duration: 1s;
     animation-timing-function: ease-in-out;
-    animation-play-state: paused;
+    animation-play-state: paused; */
 }
 @keyframes toggleActionBtns {
     0% {
@@ -247,4 +247,34 @@ button.action {
     background-color: rgb(0, 99, 0);
     width: 98px;
     height: 126px;
+}
+
+#play-again-popup {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    border: 0.1vw solid black;
+    background-color: grey;
+    align-items: center;
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+}
+
+#play-again-buttons {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 1vw;
+    padding: 1vw;
+}
+
+.popup-header {
+    background-color: rgb(87, 87, 255);
+    width: 100%;
+    text-align: center;
+}
+
+.popup-button {
+    padding: 0.3vw;
 }
