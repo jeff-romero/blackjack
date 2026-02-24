@@ -51,7 +51,7 @@
                     <button
                         class="action"
                         id="stand"
-                        onclick="">STAND</button>
+                        onclick="player.action(player.stand())">STAND</button>
                     <button
                         class="action"
                         id="double-down"
@@ -59,11 +59,11 @@
                     <button
                         class="action"
                         id="split"
-                        onclick="">SPLIT</button>
+                        onclick="">SPLIT (WIP)</button>
                     <button
                         class="action"
                         id="fold"
-                        onclick="">FOLD</button>
+                        onclick="player.action(player.fold())">FOLD</button>
                 </div>
                 <div class="stacked-button-wrapper">
                     <button
@@ -74,6 +74,20 @@
                         id="deal"
                         onclick="player.deal()">DEAL</button>
                 </div>
+            </div>
+        </div>
+        <div id="play-again-popup">
+            <p class="popup-header">PLAY AGAIN?</p>
+            <div id="play-again-buttons">
+                <button
+                    class="popup-button"
+                    id="play-again"
+                    onclick="playAgain()"
+                    >YES</button>
+                <button
+                    class="popup-button"
+                    id="cashout"
+                    onclick="cashout()">NO (CASHOUT)</button>
             </div>
         </div>
     </body>
