@@ -233,7 +233,6 @@ class Hand {
         };
 
         this.getHandTotal = function(hand=this.getHand()) {
-            console.log(hand);
             let total = 0;
             let aces = 0;
 
@@ -243,21 +242,26 @@ class Hand {
 
                 // add aces to total later
                 if (value == ACE_LOW) {
-                    aces += 1;
+                    aces++;
                     continue;
                 }
                 total += value;
             }
 
+            /*
+            TODO: 2, 5, Ace
+            TODO: 7, Ace
+            */
+
             // add aces to total
+            total += (aces * ACE_HIGH);
+
             while (aces > 0) {
-                if ((total + ACE_HIGH) <= WIN_THRESHOLD) {
-                    total += ACE_HIGH;
+                if (total > WIN_THRESHOLD) {
+                    // convert to ace low
+                    total -= (ACE_HIGH - 1);
                 }
-                else {
-                    total += ACE_LOW;
-                }
-                aces -= 1;
+                aces--;
             }
 
             return total;
@@ -297,12 +301,14 @@ class Hand {
             return true;
         };
 
-        this.fan = function() {
-            /*
-                iterate through each card in the hand and modify the position to a fan
+        this.clearHand = function() {
+            while (hand.length > 0) {
+                hand.pop();
+            }
 
-                get the middle index
-            */
+            while (splitHand.length > 0) {
+                splitHand.pop();
+            }
         };
     }
 }
@@ -447,24 +453,10 @@ class Player extends Hand {
                 return false;
             }
 
-            let hand = this.getHand();
-            while (hand.length > 0) {
-                hand.pop();
-            }
+            this.clearHand();
 
             pot.subtract(pot.getTotal());
             folded = true;
-
-            return true;
-        };
-
-        this.cashout = function() {
-            if (!playerTurn) {
-                return false;
-            }
-
-            // end the game
-            standing = true;
 
             return true;
         };
@@ -561,14 +553,6 @@ class Player extends Hand {
 class Dealer extends Hand {
     constructor() {
         super();
-
-        this.deal = function() {
-            if (!roundStarted) {
-                return false;
-            }
-
-            player.hit();
-        };
 
         this.dealSelf = function() {
             let drawnCard = shoe.drawCard();
@@ -696,10 +680,11 @@ let dealer = new Dealer();
 let player = new Player();
 let pot = new Pot();
 let shoe = new Shoe(2);
-shoe.shuffleShoe(MIN_SHUFFLES);
 let roundStarted = false;
 let playerTurn = false;
 let dealerTurn = false;
+let gameStarted = true;
+let playerDecidedOnRestart = false;
 
 
 function updateTotals() {
@@ -790,7 +775,7 @@ function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
             if (pTotal == WIN_THRESHOLD) {
                 // 3:2 payout (for every 2 chips, player will get 3 in return)
                 let wager = potTotal;
-                let halfOfWager = (wager / 2).toFixed(2);
+                let halfOfWager = Math.floor(wager / 2);
 
                 // TODO: check
                 console.log("payout: ", (wager + halfOfWager));
@@ -806,7 +791,10 @@ function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
                 console.log("push with blackjack!");
                 // payout 3:2
                 let wager = potTotal;
-                let halfOfWager = (wager / 2).toFixed(2);
+                let halfOfWager = Math.floor(wager / 2);
+
+                // TODO: check
+                console.log("payout: ", (wager + halfOfWager));
                 dealer.giveChips(wager + halfOfWager);
             }
             else {
@@ -823,11 +811,23 @@ function togglePlayAgain() {
     let playAgainPopup = document.getElementById("play-again-popup");
 
     if (playAgainPopup.style.display == "flex") {
-        playAgainPopup.style.display == "none";
+        playAgainPopup.style.display = "none";
     }
     else {
         playAgainPopup.style.display = "flex";
     }
+}
+
+let playAgain = () => {
+    gameStarted = true;
+    playerDecidedOnRestart = true;
+    console.log("player restarting round!");
+}
+
+let cashout = () => {
+    gameStarted = false;
+    playerDecidedOnRestart = true;
+    console.log("player cashing out!");
 }
 
 let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
@@ -843,88 +843,108 @@ let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
 };
 
 let start = async () => {
-    roundStarted = false;
-    playerTurn = false;
-    dealerTurn = false;
-
     // TODO: include player and dealer totals
 
-    // wait for player bet
-    await waitForAction(() => roundStarted == true);
-    console.log("starting round");
+    while (gameStarted) {
+        roundStarted = false;
+        playerTurn = false;
+        dealerTurn = false;
+        playerDecidedOnRestart = false;
+        shoe.shuffleShoe(MIN_SHUFFLES);
 
-    // round start
-    // initial deal to player and dealer
-    for (let i = 0; i < 2; i++) {
-        playerTurn = true;
-        setTimeout("player.action(player.hit())", 1000);
-        await waitForAction(() => playerTurn == false);
+        // wait for player bet
+        await waitForAction(() => roundStarted == true);
+        console.log("starting round");
 
-        // TODO: deal first card face down
-        setTimeout("dealer.dealSelf()", 1000);
-        await waitForAction(() => dealerTurn == false);
-    }
+        // round start
+        // initial deal to player and dealer
+        for (let i = 0; i < 2; i++) {
+            playerTurn = true;
+            setTimeout("player.action(player.hit())", 1000);
+            await waitForAction(() => playerTurn == false);
 
-    let pTotal = player.getHandTotal();
-    while (!player.isBust() && !player.hasFolded() && !player.isStanding() && pTotal != WIN_THRESHOLD) {
-        playerTurn = true;
-        await waitForAction(() => playerTurn == false);
-        console.log("player did action");
-        pTotal = player.getHandTotal();
-        player.printHandTotal();
-    }
-
-    if (!player.hasFolded()) {
-        if (pTotal == WIN_THRESHOLD && player.getHand().length == 2) {
-            console.log("player hit natural blackjack!");
-        }
-
-        let dTotal = dealer.getHandTotal();
-        while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
-            dealerTurn = true;
+            // TODO: deal first card face down
             setTimeout("dealer.dealSelf()", 1000);
             await waitForAction(() => dealerTurn == false);
-            dTotal = dealer.getHandTotal();
-            dealer.printHandTotal();
         }
 
-        if (dTotal == WIN_THRESHOLD) {
-            console.log("dealer hit blackjack!");
+        let pTotal = player.getHandTotal();
+        while (!player.isBust() && !player.hasFolded() && !player.isStanding() && pTotal != WIN_THRESHOLD) {
+            playerTurn = true;
+            await waitForAction(() => playerTurn == false);
+            console.log("player did action");
+            pTotal = player.getHandTotal();
+            player.printHandTotal();
         }
 
-        winCheck(pTotal, dTotal);
+        if (!player.hasFolded()) {
+            if (pTotal == WIN_THRESHOLD && player.getHand().length == 2) {
+                console.log("player hit natural blackjack!");
+            }
+
+            let dTotal = dealer.getHandTotal();
+            while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
+                dealerTurn = true;
+                setTimeout("dealer.dealSelf()", 1000);
+                await waitForAction(() => dealerTurn == false);
+                dTotal = dealer.getHandTotal();
+                dealer.printHandTotal();
+            }
+
+            if (dTotal == WIN_THRESHOLD) {
+                console.log("dealer hit blackjack!");
+            }
+
+            winCheck(pTotal, dTotal);
+        }
+
+        let finishCleanup = false;
+        // discard cards
+        setTimeout(() => {
+            let dealerHand = document.getElementById("dealer-hand");
+            let playerHand = document.getElementById("player-hand");
+
+            dealer.clearHand();
+            dealer.unstand();
+
+            player.clearHand();
+            player.unstand();
+            player.unfold();
+
+            while (dealerHand.firstChild) {
+                dealerHand.removeChild(dealerHand.firstChild);
+            }
+
+            while (playerHand.firstChild) {
+                playerHand.removeChild(playerHand.firstChild);
+            }
+
+            let dudCard = document.createElement("div");
+            dudCard.className = "dud-card";
+            dealerHand.appendChild(dudCard);
+
+            dudCard = document.createElement("div");
+            dudCard.className = "dud-card";
+            playerHand.appendChild(dudCard);
+
+            finishCleanup = true;
+        }, 5000);
+
+        await waitForAction(() => finishCleanup == true);
+
+        console.log("ready to start a new round");
+
+        if (player.getChips() > 0) {
+            togglePlayAgain();
+            await waitForAction(() => playerDecidedOnRestart == true);
+            console.log("exited await");
+            togglePlayAgain();
+        }
+        else {
+            cashout();
+            // game over screen
+        }
     }
-
-    let finishCleanup = false;
-    // discard cards
-    setTimeout(() => {
-        let dealerHand = document.getElementById("dealer-hand");
-        let playerHand = document.getElementById("player-hand");
-
-        while (dealerHand.firstChild) {
-            dealerHand.removeChild(dealerHand.firstChild);
-        }
-
-        while (playerHand.firstChild) {
-            playerHand.removeChild(playerHand.firstChild);
-        }
-
-        let dudCard = document.createElement("div");
-        dudCard.className = "dud-card";
-        dealerHand.appendChild(dudCard);
-
-        dudCard = document.createElement("div");
-        dudCard.className = "dud-card";
-        playerHand.appendChild(dudCard);
-
-        finishCleanup = true;
-    }, 5000);
-
-    await waitForAction(() => finishCleanup == true);
-
-    console.log("ready to start a new round");
-
-    // get input of whether to start a new round (cashout/play again) force cashout if pchips are 0
 }
 
 let chip1 = new Chip(document.getElementById("chip-1"));
