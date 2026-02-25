@@ -248,11 +248,6 @@ class Hand {
                 total += value;
             }
 
-            /*
-            TODO: 2, 5, Ace
-            TODO: 7, Ace
-            */
-
             // add aces to total
             total += (aces * ACE_HIGH);
 
@@ -449,7 +444,7 @@ class Player extends Hand {
 
         this.fold = function() {
             // forfeit all cards to dealer and lose bet
-            if (!playerTurn) {
+            if (!playerTurn || this.getSplitHand() > 0) {
                 return false;
             }
 
@@ -527,7 +522,7 @@ class Player extends Hand {
 
             console.log("callback success");
             updateHand("player-hand");
-            updateTotals();
+            counters.updateTotals();
             playerTurn = false;
             dealerTurn = true;
 
@@ -583,13 +578,6 @@ class Dealer extends Hand {
 
             return true;
         };
-    }
-}
-
-
-class Settings {
-    constructor() {
-
     }
 }
 
@@ -658,7 +646,7 @@ class Chip {
                 return;
             }
 
-            updateTotals();
+            counters.updateTotals();
         });
 
         this.getChipElement = function() {
@@ -672,25 +660,143 @@ class Chip {
         this.getValue = function() {
             return value;
         };
+
+        this.toggleAnimation = function() {
+            if (getComputedStyle(chip).animationPlayState == "running") {
+                chip.style.animationPlayState = "paused";
+            }
+            else {
+                chip.style.animationPlayState = "running";
+            }
+        };
     }
 }
 
 
-let dealer = new Dealer();
-let player = new Player();
-let pot = new Pot();
-let shoe = new Shoe(2);
-let roundStarted = false;
-let playerTurn = false;
-let dealerTurn = false;
-let gameStarted = true;
-let playerDecidedOnRestart = false;
+class PlayerButtons {
+    constructor() {
+        const ACTION_BTN_COLORS = {
+            "mouseover": "conic-gradient(from 225deg, rgb(200, 0, 0), rgb(200, 37, 0), rgb(200, 63, 0), rgb(200, 37, 0), rgb(200, 0, 0))",
+            "mouseleave": "conic-gradient(from 225deg, rgb(255, 0, 0), rgb(255, 45, 0), rgb(255, 80, 0), rgb(255, 45, 0), rgb(255, 0, 0))",
+            "mousedown": "conic-gradient(from 225deg, rgb(150, 0, 0), rgb(145, 27, 0), rgb(145, 46, 0), rgb(145, 27, 0), rgb(150, 0, 0))",
+            "mouseup": "conic-gradient(from 225deg, rgb(200, 0, 0), rgb(200, 37, 0), rgb(200, 63, 0), rgb(200, 37, 0), rgb(200, 0, 0))"
+        };
 
+        let chip1 = new Chip(document.getElementById("chip-1"));
+        let chip5 = new Chip(document.getElementById("chip-5"));
+        let chip25 = new Chip(document.getElementById("chip-25"));
+        let chip100 = new Chip(document.getElementById("chip-100"));
+        let chip500 = new Chip(document.getElementById("chip-500"));
 
-function updateTotals() {
-    document.getElementById("pot").innerText = pot.getTotal();
-    document.getElementById("player-chips").innerText = player.getChips();
+        let hit = document.getElementById("hit");
+        let stand = document.getElementById("stand");
+        let doubleDown = document.getElementById("double-down");
+        let split = document.getElementById("split");
+        let fold = document.getElementById("fold");
+        let allIn = document.getElementById("all-in");
+        let deal = document.getElementById("deal");
+        let reset = document.getElementById("reset");
+
+        let chipButtons = [
+            chip1,
+            chip5,
+            chip25,
+            chip100,
+            chip500
+        ];
+
+        let actionButtons = [
+            hit,
+            stand,
+            doubleDown,
+            split,
+            fold,
+            allIn,
+            deal,
+            reset
+        ];
+
+        for (let i = 0; i < actionButtons.length; i++) {
+            let btn = actionButtons[i];
+
+            btn.addEventListener("mouseover", (e) => {
+                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mouseover"];
+            });
+            btn.addEventListener("mouseleave", (e) => {
+                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mouseleave"];
+            });
+            btn.addEventListener("mousedown", (e) => {
+                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mousedown"];
+            });
+            btn.addEventListener("mouseup", (e) => {
+                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mouseup"];
+            });
+        }
+
+        allIn.addEventListener("click", () => {
+            if (roundStarted || !dealer.takeChips(player.getChips())) {
+                return;
+            }
+
+            counters.updateTotals();
+            player.deal();
+        });
+
+        this.printChipButtons = function() {
+            for (let i = 0; i < chipButtons.length; i++) {
+                chipButtons[i].toggleAnimation();
+            }
+        };
+    }
 }
+
+
+class Settings {
+    constructor() {
+
+    }
+}
+
+
+class Counters {
+    constructor(dealer=null, player=null, pot=null, shoe=null) {
+        // objects
+        this.dealer = dealer;
+        this.player = player;
+        this.pot = pot;
+        this.shoe = shoe;
+
+        // elements
+        this.playerChipCounter = document.getElementById("player-chips");
+        this.potCounter = document.getElementById("pot");
+        this.shoeCounter = document.getElementById("shoe-counter");
+
+        this.updateTotals();
+    }
+
+    updatePlayerTotals() {
+        if (this.playerChipCounter == null || this.potCounter == null) {
+            return;
+        }
+
+        this.playerChipCounter.innerText = this.player.getChips();
+        this.potCounter.innerText = this.pot.getTotal();
+    }
+
+    updateShoeCounter() {
+        if (this.shoe == null) {
+            return;
+        }
+
+        this.shoeCounter.innerText = this.shoe.getShoe().length;
+    }
+
+    updateTotals() {
+        this.updatePlayerTotals();
+        this.updateShoeCounter();
+    }
+}
+
 
 function getCardXCoordinate(e) {
     console.log(e.getBoundingClientRect());
@@ -758,9 +864,20 @@ function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
 
     if (dealer.isBust()) {
         if (!player.isBust()) {
-            console.log("dealer bust so player wins!");
-            // 1:1 payout
-            dealer.giveChips(potTotal * 2);
+            if (pTotal == WIN_THRESHOLD) {
+                // 3:2 payout (for every 2 chips, player will get 3 in return)
+                let wager = potTotal;
+                let halfOfWager = Math.floor(wager / 2);
+
+                // TODO: check
+                console.log("payout: ", (wager + halfOfWager));
+                dealer.giveChips(wager + halfOfWager);
+            }
+            else {
+                console.log("dealer bust so player wins!");
+                // 1:1 payout
+                dealer.giveChips(potTotal * 2);
+            }
         }
         else {
             console.log("both dealer and player bust!");
@@ -804,7 +921,7 @@ function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
             }
         }
     }
-    updateTotals();
+    counters.updateTotals();
 }
 
 function togglePlayAgain() {
@@ -818,13 +935,13 @@ function togglePlayAgain() {
     }
 }
 
-let playAgain = () => {
+function playAgain() {
     gameStarted = true;
     playerDecidedOnRestart = true;
     console.log("player restarting round!");
 }
 
-let cashout = () => {
+function cashout() {
     gameStarted = false;
     playerDecidedOnRestart = true;
     console.log("player cashing out!");
@@ -841,6 +958,19 @@ let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
         }, ms);
     });
 };
+
+
+let dealer = new Dealer();
+let player = new Player();
+let pot = new Pot();
+let shoe = new Shoe(2);
+let counters = new Counters(dealer, player, pot, shoe);
+let playerActionButtons = new PlayerButtons();
+let roundStarted = false;
+let playerTurn = false;
+let dealerTurn = false;
+let gameStarted = true;
+let playerDecidedOnRestart = false;
 
 let start = async () => {
     // TODO: include player and dealer totals
@@ -862,10 +992,12 @@ let start = async () => {
             playerTurn = true;
             setTimeout("player.action(player.hit())", 1000);
             await waitForAction(() => playerTurn == false);
+            counters.updateTotals();
 
             // TODO: deal first card face down
             setTimeout("dealer.dealSelf()", 1000);
             await waitForAction(() => dealerTurn == false);
+            counters.updateTotals();
         }
 
         let pTotal = player.getHandTotal();
@@ -875,6 +1007,7 @@ let start = async () => {
             console.log("player did action");
             pTotal = player.getHandTotal();
             player.printHandTotal();
+            counters.updateTotals();
         }
 
         if (!player.hasFolded()) {
@@ -889,6 +1022,7 @@ let start = async () => {
                 await waitForAction(() => dealerTurn == false);
                 dTotal = dealer.getHandTotal();
                 dealer.printHandTotal();
+                counters.updateTotals();
             }
 
             if (dTotal == WIN_THRESHOLD) {
@@ -897,6 +1031,8 @@ let start = async () => {
 
             winCheck(pTotal, dTotal);
         }
+
+        roundStarted = false;
 
         let finishCleanup = false;
         // discard cards
@@ -927,6 +1063,7 @@ let start = async () => {
             dudCard.className = "dud-card";
             playerHand.appendChild(dudCard);
 
+            counters.updateTotals();
             finishCleanup = true;
         }, 5000);
 
@@ -934,7 +1071,7 @@ let start = async () => {
 
         console.log("ready to start a new round");
 
-        if (player.getChips() > 0) {
+        if (player.getChips() > 0 && !shoe.isEmpty()) {
             togglePlayAgain();
             await waitForAction(() => playerDecidedOnRestart == true);
             console.log("exited await");
@@ -946,23 +1083,6 @@ let start = async () => {
         }
     }
 }
-
-let chip1 = new Chip(document.getElementById("chip-1"));
-let chip5 = new Chip(document.getElementById("chip-5"));
-let chip25 = new Chip(document.getElementById("chip-25"));
-let chip100 = new Chip(document.getElementById("chip-100"));
-let chip500 = new Chip(document.getElementById("chip-500"));
-
-let allIn = document.getElementById("all-in");
-
-allIn.addEventListener("click", () => {
-    if (roundStarted || !dealer.takeChips(player.getChips())) {
-        return;
-    }
-
-    updateTotals();
-    player.deal();
-});
 
 
 start();
