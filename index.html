@@ -7,6 +7,16 @@
     </head>
     <body id="page-wrapper">
         <div id="dealer-space">
+            <div id="settings-wrapper">
+                <button
+                    class="action"
+                    id="reset"
+                    >RESET</button>
+                <div id="shoe-counter-wrapper">
+                    <p class="counter">SHOE:</p>
+                    <p class="counter" id="shoe-counter">0</p>
+                </div>
+            </div>
             <div class="hand-wrapper" id="dealer-hand">
                 <div class="dud-card"></div>
             </div>
@@ -15,64 +25,66 @@
             <div class="hand-wrapper" id="player-hand">
                 <div class="dud-card"></div>
             </div>
-            <div id="counters">
-                <div class="counter">
-                    <p class="counter-value" id="player-chips">0</p>
-                    <p class="counter-caption">PLAYER CHIPS</p>
+            <div id="counters-controls-wrapper">
+                <div id="counters">
+                    <div class="counter">
+                        <p class="counter-value" id="player-chips">0</p>
+                        <p class="counter-caption">PLAYER CHIPS</p>
+                    </div>
+                    <div class="counter">
+                        <p class="counter-value" id="pot">0</p>
+                        <p class="counter-caption">POT</p>
+                    </div>
                 </div>
-                <div class="counter">
-                    <p class="counter-value" id="pot">0</p>
-                    <p class="counter-caption">POT</p>
-                </div>
-            </div>
-            <div id="controls">
-                <div id="chip-button-wrapper">
-                    <button
-                        class="chip"
-                        id="chip-1">1</button>
-                    <button
-                        class="chip"
-                        id="chip-5">5</button>
-                    <button
-                        class="chip"
-                        id="chip-25">25</button>
-                    <button
-                        class="chip"
-                        id="chip-100">100</button>
-                    <button
-                        class="chip"
-                        id="chip-500">500</button>
-                </div>
-                <div id="player-actions">
-                    <button
-                        class="action"
-                        id="hit"
-                        onclick="player.action(player.hit())">HIT</button>
-                    <button
-                        class="action"
-                        id="stand"
-                        onclick="player.action(player.stand())">STAND</button>
-                    <button
-                        class="action"
-                        id="double-down"
-                        onclick="player.action(player.doubleDown())">DOUBLE DOWN</button>
-                    <button
-                        class="action"
-                        id="split"
-                        onclick="">SPLIT (WIP)</button>
-                    <button
-                        class="action"
-                        id="fold"
-                        onclick="player.action(player.fold())">FOLD</button>
-                </div>
-                <div class="stacked-button-wrapper">
-                    <button
-                        class="action"
-                        id="all-in">ALL IN</button>
-                    <button
-                        class="action"
-                        id="deal"
-                        onclick="player.deal()">DEAL</button>
+                <div id="controls">
+                    <div id="chip-button-wrapper">
+                        <button
+                            class="chip"
+                            id="chip-1">1</button>
+                        <button
+                            class="chip"
+                            id="chip-5">5</button>
+                        <button
+                            class="chip"
+                            id="chip-25">25</button>
+                        <button
+                            class="chip"
+                            id="chip-100">100</button>
+                        <button
+                            class="chip"
+                            id="chip-500">500</button>
+                    </div>
+                    <div id="player-actions">
+                        <button
+                            class="action"
+                            id="hit"
+                            onclick="player.action(player.hit())">HIT</button>
+                        <button
+                            class="action"
+                            id="stand"
+                            onclick="player.action(player.stand())">STAND</button>
+                        <button
+                            class="action"
+                            id="double-down"
+                            onclick="player.action(player.doubleDown())">DOUBLE DOWN</button>
+                        <button
+                            class="action"
+                            id="split"
+                            onclick="">SPLIT (WIP)</button>
+                        <button
+                            class="action"
+                            id="fold"
+                            onclick="player.action(player.fold())">FOLD</button>
+                    </div>
+                    <div class="stacked-button-wrapper">
+                        <button
+                            class="action"
+                            id="all-in">ALL IN</button>
+                        <button
+                            class="action"
+                            id="deal"
+                            onclick="player.deal()">DEAL</button>
+                    </div>
                 </div>
             </div>
         </div>
