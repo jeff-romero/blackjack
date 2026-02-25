@@ -589,31 +589,41 @@ class Chip {
                 "mouseover": "lightgrey",
                 "mouseleave": "white",
                 "mousedown": "darkgrey",
-                "mouseup": "lightgrey"
+                "mouseup": "lightgrey",
+                "touchstart": "darkgrey",
+                "touchend": "white"
             },
             "5": {
                 "mouseover": "#8b1e22",
                 "mouseleave": "#c12e34",
                 "mousedown": "#69171a",
-                "mouseup": "#8b1e22"
+                "mouseup": "#8b1e22",
+                "touchstart": "#69171a",
+                "touchend": "#c12e34"
             },
             "25": {
                 "mouseover": "#287e39",
                 "mouseleave": "#319845",
                 "mousedown": "#1f5f2b",
-                "mouseup": "#287e39"
+                "mouseup": "#287e39",
+                "touchstart": "#1f5f2b",
+                "touchend": "#319845"
             },
             "100": {
                 "mouseover": "#2b4472",
                 "mouseleave": "#3b5b98",
                 "mousedown": "#22365a",
-                "mouseup": "#2b4472"
+                "mouseup": "#2b4472",
+                "touchstart": "#22365a",
+                "touchend": "#3b5b98"
             },
             "500": {
                 "mouseover": "#202020",
                 "mouseleave": "#303030",
                 "mousedown": "#000000",
-                "mouseup": "#202020"
+                "mouseup": "#202020",
+                "touchstart": "#000000",
+                "touchend": "#303030"
             }
         };
         const CHIP_VALUES = {
@@ -676,10 +686,12 @@ class Chip {
 class PlayerButtons {
     constructor() {
         const ACTION_BTN_COLORS = {
-            "mouseover": "conic-gradient(from 225deg, rgb(200, 0, 0), rgb(200, 37, 0), rgb(200, 63, 0), rgb(200, 37, 0), rgb(200, 0, 0))",
-            "mouseleave": "conic-gradient(from 225deg, rgb(255, 0, 0), rgb(255, 45, 0), rgb(255, 80, 0), rgb(255, 45, 0), rgb(255, 0, 0))",
-            "mousedown": "conic-gradient(from 225deg, rgb(150, 0, 0), rgb(145, 27, 0), rgb(145, 46, 0), rgb(145, 27, 0), rgb(150, 0, 0))",
-            "mouseup": "conic-gradient(from 225deg, rgb(200, 0, 0), rgb(200, 37, 0), rgb(200, 63, 0), rgb(200, 37, 0), rgb(200, 0, 0))"
+            "mouseover": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
+            "mouseleave": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))",
+            "mousedown": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
+            "mouseup": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
+            "touchstart": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
+            "touchend": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))"
         };
 
         let chip1 = new Chip(document.getElementById("chip-1"));
@@ -731,6 +743,12 @@ class PlayerButtons {
             btn.addEventListener("mouseup", (e) => {
                 (e.target).style.backgroundImage = ACTION_BTN_COLORS["mouseup"];
             });
+            btn.addEventListener("touchstart", (e) => {
+                (e.target).style.backgroundImage = ACTION_BTN_COLORS["touchstart"];
+            });
+            btn.addEventListener("touchend", (e) => {
+                (e.target).style.backgroundImage = ACTION_BTN_COLORS["touchend"];
+            })
         }
 
         allIn.addEventListener("click", () => {
