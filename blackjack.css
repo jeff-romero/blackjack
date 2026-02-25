@@ -10,26 +10,55 @@
     font-size: clamp(0.9rem, calc(1vw + .5rem), 1.2rem);
 }
 
+:root {
+    --dudCardWidth: 98px;
+    --dudCardHeight: 126px;
+}
+
 #page-wrapper {
     position: relative;
     display: flex;
     flex-direction: column;
     background-color: rgb(0, 99, 0);
-    justify-content: space-evenly;
 }
 
 #dealer-space {
     position: relative;
     display: flex;
     justify-content: center;
+    /* background-color: darkcyan; */
 }
+
+#settings-wrapper {
+    position: absolute;
+    display: flex;
+    top: 0;
+    left: 0;
+    flex-direction: column;
+}
+
+#reset {
+    position: relative;
+}
+
+#shoe-counter-wrapper {
+    position: relative;
+    display: flex;
+    /* border: 0.1vw solid white; */
+    padding: 0.5vw;
+    gap: 1vw;
+}
+
+/* #shoe-counter {
+    color: white;
+} */
 
 .hand-wrapper {
     position: relative;
     display: flex;
-    border: 0.1vw solid black;
+    /* border: 0.1vw solid black; */
     border-radius: 0.5vw;
-    padding: 2vw;
+    margin: 1vw;
     /* scale: 2; */
 }
 
@@ -41,7 +70,6 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     /* background-color: blue; */
 }
@@ -50,28 +78,60 @@
     position: relative;
 }
 
+img {
+    width: 100%;
+    height: auto;
+}
+
 .card {
     position: relative;
     display: flex;
+    width: 8vw;
+    height: auto;
 }
 
-.ace-of-spades {
+/* @media screen and (max-width: 981px) {
+    .card {
+        position: relative;
+        display: flex;
+        width: 68.6px;
+        height: 88.2px;
+    }
+} */
+
+.dud-card {
+    position: relative;
+    background-color: rgb(0, 99, 0);
+    /* background-color: purple; */
+    width: 8vw;
+    height: 11vw;
+}
+
+/* @media screen and (max-width: 981px) {
+    .dud-card {
+        position: relative;
+        background-color: rgb(0, 99, 0);
+        width: 68.6px;
+        height: 88.2px;
+    }
+} */
+
+#counters-controls-wrapper {
+    position: relative;
     display: flex;
-}
-
-.ten-of-hearts {
-    position: absolute;
-    left: -48px;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 #counters {
     position: relative;
     display: flex;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.8);
     padding: 0.5vw;
     width: 25%;
-    justify-content: center;
-    gap: 2vw;
+    justify-content: space-evenly;
+    /* gap: 3vw; */
 }
 
 .counter {
@@ -82,11 +142,12 @@
     color: white;
     /* width: 95%; */
     /* border: 0.1vw solid white; */
+    /* background-color: red; */
 }
 
 p.counter-value {
     display: flex;
-    border: 0.1vw solid black;
+    border: 0.1vw solid white;
     padding: 0.5vw;
     width: 100%;
     /* vertical-align: middle; */
@@ -103,11 +164,11 @@ p.counter-caption {
     display: flex;
     width: 100%;
     z-index: 1;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.8);
     justify-content: center;
-    gap: 1vw;
+    gap: 2vw;
     padding-block: 1vw;
-    padding-inline: 0.5vw;
+    /* padding-inline: 0.5vw; */
 }
 
 #chip-button-wrapper {
@@ -116,7 +177,7 @@ p.counter-caption {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1vw;
+    gap: 1.2vw;
     /* border: 0.1vw solid red; */
     animation-name: toggleChips;
     animation-duration: 1s;
@@ -132,18 +193,48 @@ p.counter-caption {
     }
 }
 
-
 button.chip {
-    /* flex: 1; */
-    flex-shrink: 2;
+    position: relative;
     border-radius: 50%;
-    padding: 10px;
-    width: 75px;
-    height: 75px;
-    /* min-width: 25px;
-    max-width: 75px;
-    min-height: 25px;
-    max-height: 75px; */
+    width: 5vw;
+    height: 5vw;
+    color: white;
+    border-color: white;
+}
+
+@property --angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+button.chip::after, button.chip::before {
+    --angle: 0deg;
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    padding: 2.7vw;
+    border-radius: 50%;
+    /* background-image: conic-gradient(from var(--angle), red, blue, red); */
+    animation: spin 2s linear infinite;
+    animation-play-state: running;
+}
+/* button.chip::before {
+    filter: blur(1.2rem);
+    opacity: 0.8;
+} */
+@keyframes spin {
+    from {
+        --angle: 0deg;
+    }
+    to {
+        --angle: 360deg;
+    }
 }
 
 #chip-1 {
@@ -151,37 +242,47 @@ button.chip {
     background-color: white;
     color: #3b5b98;
 }
+#chip-1::after, #chip-1::before {
+    background-image: conic-gradient(from var(--angle), #3b5b98, white, #3b5b98, white, #3b5b98);
+}
 
 #chip-5 {
-    border-color: white;
     background-color: #c12e34;
-    color: white;
+}
+#chip-5::after, #chip-5::before {
+    background-image: conic-gradient(from var(--angle), #c12e34, white, #c12e34, white, #c12e34);
 }
 
 #chip-25 {
-    border-color: white;
     background-color: #319845;
-    color: white;
+}
+#chip-25::after, #chip-25::before {
+    background-image: conic-gradient(from var(--angle), #319845, white, #319845, white, #319845);
 }
 
 #chip-100 {
-    border-color: white;
     background-color: #3b5b98;
-    color: white;
+}
+#chip-100::after, #chip-100::before {
+    background-image: conic-gradient(from var(--angle), #3b5b98, white, #3b5b98, white, #3b5b98);
 }
 
 #chip-500 {
-    border-color: white;
     background-color: #303030;
-    color: white;
+}
+#chip-500::after, #chip-500::before {
+    background-image: conic-gradient(from var(--angle), #303030, white, #303030, white, #303030);
 }
 
 button.action {
     position: relative;
     overflow-wrap: break-word;
-    padding: 1vw;
+    padding: 0.5vw;
     flex: 0.5;
-    border: 0.2vw outset red;
+    border: 0.2vw outset black;
+    /* background-image: conic-gradient(from 45deg, rgb(255, 165, 0), rgb(255, 115, 0), rgb(255, 90, 0), rgb(255, 115, 0), rgb(255, 165, 0)); */
+    background-image: conic-gradient(from 225deg, rgb(255, 0, 0), rgb(255, 45, 0), rgb(255, 80, 0), rgb(255, 45, 0), rgb(255, 0, 0));
+    color: white;
 }
 
 #player-actions {
@@ -231,22 +332,6 @@ button.action {
     100% {
         transform: scale(0);
     }
-}
-
-#deal {
-    position: relative;
-    display: flex;
-}
-
-#deal::after {
-    position: absolute;
-}
-
-.dud-card {
-    position: relative;
-    background-color: rgb(0, 99, 0);
-    width: 98px;
-    height: 126px;
 }
 
 #play-again-popup {
