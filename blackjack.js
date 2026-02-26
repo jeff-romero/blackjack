@@ -708,6 +708,8 @@ class PlayerButtons {
         let allIn = document.getElementById("all-in");
         let deal = document.getElementById("deal");
         let reset = document.getElementById("reset");
+        let playAgain = document.getElementById("play-again");
+        let cashout = document.getElementById("cashout");
 
         let chipButtons = [
             chip1,
@@ -725,7 +727,9 @@ class PlayerButtons {
             fold,
             allIn,
             deal,
-            reset
+            reset,
+            playAgain,
+            cashout
         ];
 
         for (let i = 0; i < actionButtons.length; i++) {
