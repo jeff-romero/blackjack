@@ -19,7 +19,17 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    background-color: rgb(0, 99, 0);
+    /* background-color: rgb(0, 99, 0); */
+    background-image: repeating-linear-gradient(to right, rgb(0, 99, 0) .2%, rgb(8, 92, 8) .4%, rgb(0, 99, 0) .6%);
+}
+#page-wrapper::before {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    content: "";
+    background-image: repeating-linear-gradient(rgb(0, 99, 0) .2%, rgb(8, 92, 8) .4%, rgb(0, 99, 0) .6%);
+    opacity: 0.5;
+    z-index: -1;
 }
 
 #dealer-space {
@@ -101,8 +111,7 @@ img {
 
 .dud-card {
     position: relative;
-    background-color: rgb(0, 99, 0);
-    background-color: purple;
+    background-image: repeating-linear-gradient(to right, rgb(0, 99, 0) .2%, rgb(8, 92, 8) .4%, rgb(0, 99, 0) .6%);
     width: 8vw;
     height: 11vw;
 }
@@ -305,7 +314,7 @@ button.action {
     overflow-wrap: break-word;
     padding: 0.5vw;
     flex: 0.5;
-    border: 0.2vw outset black;
+    border: 0.4vw outset black;
     /* background-image: conic-gradient(from 45deg, rgb(255, 165, 0), rgb(255, 115, 0), rgb(255, 90, 0), rgb(255, 115, 0), rgb(255, 165, 0)); */
     background-image: radial-gradient(yellow, orange, red);
     color: black;
@@ -365,8 +374,7 @@ button.action {
     display: none;
     flex-direction: column;
     border: 0.1vw solid black;
-    background-color: grey;
-    align-items: center;
+    background-image: radial-gradient(circle at center, black, rgb(63, 63, 63));
     top: 50%;
     right: 50%;
     transform: translate(50%, -50%);
@@ -381,9 +389,10 @@ button.action {
 }
 
 .popup-header {
-    background-color: rgb(87, 87, 255);
+    background-color: rgb(255, 77, 77);
     width: 100%;
     text-align: center;
+    padding-block: 0.3vw;
 }
 
 .popup-button {
