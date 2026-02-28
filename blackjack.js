@@ -1,6 +1,9 @@
 
 const SUITS = ["hearts", "diamonds", "spades", "clubs"];
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "ace", "jack", "queen", "king"];
+const PLAYER_HAND_ID = "player-hand";
+const DEALER_HAND_ID = "dealer-hand";
+const SPLIT_HAND_ID = "split-hand";
 const MAX_CHIPS = 999999999999;
 const MAX_CHIP_VAL = 500;
 const MIN_SHUFFLES = 3;
@@ -96,6 +99,10 @@ class Card {
             return VALUE_MAP[this.getRank()];
         };
 
+        this.cardString = function() {
+            return this.getRank() + " of " + this.getSuit();
+        };
+
         this.printCard = function() {
             console.log(this.getRank() + " of " + this.getSuit());
         };
@@ -135,13 +142,16 @@ class Deck {
         };
 
         this.shuffleDeck = function(shuffles=1) {
-            let max = deck.length - 1;
-            for (let i = deck.length - 1; i > 0; i--) {
-                let j = Math.floor(Math.random() * (max + 1));
+            for (let _ = 0; _ < shuffles; _++) {
+                // fisher-yates shuffle algorithm
+                let max = deck.length - 1;
+                for (let i = deck.length - 1; i > 0; i--) {
+                    let j = Math.floor(Math.random() * (max + 1));
 
-                let temp = deck[i];
-                deck[i] = deck[j];
-                deck[j] = temp;
+                    let temp = deck[i];
+                    deck[i] = deck[j];
+                    deck[j] = temp;
+                }
             }
         };
 
@@ -180,8 +190,8 @@ class Shoe {
         };
 
         this.shuffleShoe = function(shuffles=1) {
-            // fisher-yates shuffle algorithm
             for (let _ = 0; _ < shuffles; _++) {
+                // fisher-yates shuffle algorithm
                 let max = shoe.length - 1;
                 for (let i = shoe.length - 1; i > 0; i--) {
                     let j = Math.floor(Math.random() * (max + 1));
@@ -203,7 +213,7 @@ class Shoe {
 
         this.printShoe = function() {
             for (let i = 0; i < shoe.length; i++) {
-                shoe[i].printCard();
+                shoe[i].printDeck();
             }
         };
     }
@@ -278,6 +288,10 @@ class Hand {
             return (this.getHandTotal() > WIN_THRESHOLD);
         };
 
+        this.splitHandIsBust = function() {
+            return (this.getSplitHandTotal() > WIN_THRESHOLD);
+        };
+
         this.isStanding = function() {
             return standing;
         };
@@ -322,6 +336,7 @@ class Player extends Hand {
         const STARTING_CHIPS = 100;
 
         super();
+        let splitHand = new Hand();
         let total = STARTING_CHIPS;
         let chips = document.getElementById("player-chips");
         chips.innerText = total;
@@ -424,6 +439,8 @@ class Player extends Hand {
 
             let secondCard = hand.pop();
             this.getSplitHand().push(secondCard());
+            console.log("split hand after splitting: ");
+            this.getSplitHand()[0].printCard();
 
             return false;
         };
@@ -521,7 +538,7 @@ class Player extends Hand {
             }
 
             console.log("callback success");
-            updateHand("player-hand");
+            updateHand(PLAYER_HAND_ID);
             counters.updateTotals();
             playerTurn = false;
             dealerTurn = true;
@@ -552,7 +569,7 @@ class Dealer extends Hand {
         this.dealSelf = function() {
             let drawnCard = shoe.drawCard();
             this.addToHand(drawnCard);
-            updateHand("dealer-hand");
+            updateHand(DEALER_HAND_ID);
 
             dealerTurn = false;
             playerTurn = true;
@@ -633,6 +650,20 @@ class Chip {
             "100": 100,
             "500": 500
         };
+
+        // let chip1 = document.getElementById("chip-1");
+        // let chip5 = document.getElementById("chip-5");
+        // let chip25 = document.getElementById("chip-25");
+        // let chip100 = document.getElementById("chip-100");
+        // let chip500 = document.getElementById("chip-500");
+
+        // let chipButtons = [
+        //     chip1,
+        //     chip5,
+        //     chip25,
+        //     chip100,
+        //     chip500
+        // ];
 
         let chip = element;
         let chipText = "" + chip.innerText;
@@ -821,11 +852,19 @@ class Counters {
 
 
 function getCardXCoordinate(e) {
+    if (e === undefined) {
+        return;
+    }
+
     console.log(e.getBoundingClientRect());
     return e.getBoundingClientRect().x;
 }
 
 function fanHand(handWrapper) {
+    if (handWrapper === undefined) {
+        return;
+    }
+
     let startX = getCardXCoordinate(handWrapper.children[0]);
     console.log(startX);
     let offsetX = 0;
@@ -849,16 +888,24 @@ function createVisualCard(card) {
 
 function updateHand(handId) {
     let handWrapper = document.getElementById(handId);
+    let splitHandWrapper = document.getElementById("split-hand");
 
     while (handWrapper.firstChild) {
         handWrapper.removeChild(handWrapper.firstChild);
     }
 
+    if (splitHandWrapper.style.display != "none") {
+        while (splitHandWrapper.firstChild) {
+            splitHandWrapper.removeChild(splitHandWrapper.firstChild);
+        }
+    }
+
     let hand = undefined;
     // TODO: splitHand
+    // TODO: put split hand in separate function
     let splitHand = undefined;
 
-    if (handId == "player-hand") {
+    if (handId == PLAYER_HAND_ID) {
         hand = player.getHand();
         splitHand = player.getSplitHand();
     }
@@ -877,7 +924,17 @@ function updateHand(handId) {
         handWrapper.appendChild(cardWrapper);
     }
 
+    if (splitHand !== undefined) {
+        for (let i = 0; i < splitHand.length; i++) {
+            let card = splitHand[i];
+
+            let cardWrapper = createVisualCard(card);
+            splitHandWrapper.appendChild(cardWrapper);
+        }
+    }
+
     fanHand(handWrapper);
+    fanHand(splitHandWrapper);
 }
 
 function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
@@ -1023,13 +1080,31 @@ let start = async () => {
         }
 
         let pTotal = player.getHandTotal();
+        let splitPTotal = undefined;
+        let splitHandWrapper = document.getElementById("split-hand");
         while (!player.isBust() && !player.hasFolded() && !player.isStanding() && pTotal != WIN_THRESHOLD) {
             playerTurn = true;
             await waitForAction(() => playerTurn == false);
             console.log("player did action");
             pTotal = player.getHandTotal();
             player.printHandTotal();
+
+            // if (player.getSplitHand().length > 0) {
+            //     playerTurn = true;
+            //     await waitForSplitHandAction(() => playerTurn == false);
+            //     console.log("player did split hand action!");
+            //     splitPTotal = player.getSplitHandTotal();
+            //     player.printSplitHandTotal();
+            // }
+
             counters.updateTotals();
+
+            // if (pTotal == WIN_THRESHOLD) {
+            //     break;
+            // }
+            // if (splitPTotal !== undefined && (splitPTotal == WIN_THRESHOLD)) {
+            //     break;
+            // }
         }
 
         if (!player.hasFolded()) {
