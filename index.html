@@ -38,6 +38,10 @@
                         <p class="counter-value" id="pot">0</p>
                         <p class="counter-caption">POT</p>
                     </div>
+                    <div class="counter" id="split-pot-wrapper">
+                        <p class="counter-value" id="split-pot">0</p>
+                        <p class="counter-caption">SPLIT POT</p>
+                    </div>
                 </div>
                 <div id="controls">
                     <div id="chip-button-wrapper">
@@ -74,7 +78,7 @@
                         <button
                             class="action"
                             id="stand"
-                            onclick="player.action(player.stand())">STAND</button>
+                            onclick="player.action(player.getHand().stand())">STAND</button>
                         <button
                             class="action"
                             id="double-down"
@@ -82,7 +86,7 @@
                         <button
                             class="action"
                             id="split"
-                            onclick="">SPLIT (WIP)</button>
+                            onclick="player.action(player.split())">SPLIT (WIP)</button>
                         <button
                             class="action"
                             id="fold"
