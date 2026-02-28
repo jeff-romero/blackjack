@@ -4,6 +4,8 @@ const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "ace", "jack", "que
 const PLAYER_HAND_ID = "player-hand";
 const DEALER_HAND_ID = "dealer-hand";
 const SPLIT_HAND_ID = "split-hand";
+const FACE_DOWN = "face-down";
+const STARTING_CHIPS = 100;
 const MAX_CHIPS = 999999999999;
 const MAX_CHIP_VAL = 500;
 const MIN_SHUFFLES = 3;
@@ -134,11 +136,7 @@ class Deck {
         };
 
         this.isEmpty = function() {
-            if (deck.length == 0) {
-                return true;
-            }
-
-            return false;
+            return deck.length == 0;
         };
 
         this.shuffleDeck = function(shuffles=1) {
@@ -182,11 +180,7 @@ class Shoe {
         };
 
         this.isEmpty = function() {
-            if (shoe.length == 0) {
-                return true;
-            }
-
-            return false;
+            return shoe.length == 0;
         };
 
         this.shuffleShoe = function(shuffles=1) {
@@ -213,7 +207,7 @@ class Shoe {
 
         this.printShoe = function() {
             for (let i = 0; i < shoe.length; i++) {
-                shoe[i].printDeck();
+                shoe[i].printCard();
             }
         };
     }
@@ -223,26 +217,13 @@ class Shoe {
 class Hand {
     constructor() {
         let hand = [];
-        let splitHand = [];
         let standing = false;
 
         this.getHand = function() {
             return hand;
         };
 
-        this.getSplitHand = function() {
-            return splitHand;
-        };
-
-        this.addToHand = function(card) {
-            hand.push(card);
-        };
-
-        this.addToSplitHand = function(card) {
-            splitHand.push(card);
-        };
-
-        this.getHandTotal = function(hand=this.getHand()) {
+        this.getHandTotal = function() {
             let total = 0;
             let aces = 0;
 
@@ -272,24 +253,12 @@ class Hand {
             return total;
         };
 
-        this.getSplitHandTotal = function() {
-            return this.getHandTotal(this.getSplitHand());
-        };
-
-        this.printHandTotal = function(hand=this.getHand()) {
-            console.log("total: ", this.getHandTotal(hand));
-        };
-
-        this.printSplitHandTotal = function() {
-            this.printHandTotal(this.getSplitHand());
+        this.printHandTotal = function() {
+            console.log("total: ", this.getHandTotal());
         };
 
         this.isBust = function() {
             return (this.getHandTotal() > WIN_THRESHOLD);
-        };
-
-        this.splitHandIsBust = function() {
-            return (this.getSplitHandTotal() > WIN_THRESHOLD);
         };
 
         this.isStanding = function() {
@@ -314,16 +283,16 @@ class Hand {
             while (hand.length > 0) {
                 hand.pop();
             }
+        };
 
-            while (splitHand.length > 0) {
-                splitHand.pop();
-            }
+        this.isEmpty = function() {
+            return hand.length == 0;
         };
     }
 }
 
 
-class Player extends Hand {
+class Player {
     /*
     player:
         hit - take another card
@@ -333,20 +302,84 @@ class Player extends Hand {
         surrender - forfeit half the bet and end the hand immediately. not allowed after splitting.
     */
     constructor() {
-        const STARTING_CHIPS = 100;
+        let hand = new Hand();
+        let pot = new Pot();
+        let splitHand = undefined
+        let splitPot = undefined;
 
-        super();
-        let splitHand = new Hand();
+        let currentHand = hand;
+        let currentPot = pot;
+
         let total = STARTING_CHIPS;
         let chips = document.getElementById("player-chips");
         chips.innerText = total;
         let folded = false;
 
+        this.useMainPot = function() {
+            currentPot = pot;
+        };
+
+        this.useSplitPot = function() {
+            currentPot = splitPot;
+        };
+
+        this.useMainHand = function() {
+            currentHand = hand;
+        };
+
+        this.useSplitHand = function() {
+            currentHand = splitHand;
+        };
+
+        this.getHand = function() {
+            return currentHand;
+        };
+
+        this.getHandArr = function() {
+            return currentHand.getHand();
+        };
+
+        this.getMainHand = function() {
+            return hand;
+        };
+
+        this.getMainHandArr = function() {
+            return hand.getHand();
+        };
+
+        this.getSplitHand = function() {
+            return (splitHand !== undefined) ? splitHand : undefined;
+        };
+
+        this.getSplitHandArr = function() {
+            return (splitHand !== undefined) ? splitHand.getHand() : [];
+        };
+
+        this.getPot = function() {
+            return currentPot;
+        };
+
+        this.getMainPot = function() {
+            return pot;
+        };
+
+        this.getSplitPot = function() {
+            return splitPot;
+        };
+
         this.getChips = function() {
             return total;
         };
 
-        this.add = function(value=0) {
+        this.getHandTotal = function() {
+            return currentHand.getHandTotal();
+        };
+
+        this.printHandTotal = function() {
+            console.log("player hand total: ", currentHand.getHandTotal());
+        };
+
+        this.addChips = function(value=0) {
             if (value <= 0 || value > MAX_CHIP_VAL || (total + value) > MAX_CHIPS) {
                 return false;
             }
@@ -356,7 +389,7 @@ class Player extends Hand {
             return true;
         };
 
-        this.subtract = function(value=0) {
+        this.subtractChips = function(value=0) {
             if (value <= 0 || value > MAX_CHIP_VAL || (total - value) < 0) {
                 return false;
             }
@@ -372,18 +405,7 @@ class Player extends Hand {
             }
 
             let drawnCard = shoe.drawCard();
-            this.addToHand(drawnCard);
-
-            return true;
-        };
-
-        this.hitSplitHand = function() {
-            if (!playerTurn) {
-
-            }
-
-            let drawnCard = shoe.drawCard();
-            this.addToSplitHand(drawnCard);
+            this.getHandArr().push(drawnCard);
 
             return true;
         };
@@ -396,7 +418,7 @@ class Player extends Hand {
             /*
             increase initial bet by 100% and take one more card. the additional bet is placed next to the original bet.
             */
-            let currentBet = pot.getTotal();
+            let currentBet = this.getPot().getTotal();
 
             if (!dealer.takeChips(currentBet)) {
                 return false;
@@ -407,40 +429,33 @@ class Player extends Hand {
             return true;
         };
 
-        this.doubleDownOnSplit = function() {
-            if (!playerTurn) {
-
-            }
-
-            // TODO: update this
-            let currentBet = undefined;
-
-            if (!dealer.takeChips(currentBet)) {
-                return false;
-            }
-
-            this.hitSplitHand();
-
-            return true;
-        };
-
         this.split = function() {
-            if (!playerTurn || this.getHand().length > 2) {
+            if (!playerTurn || this.getMainHandArr().length > 2) {
                 return false;
+            }
+            else if (total < MIN_BET) {
+                // TODO: implement visual notification that player cannot split
+                console.log("player cannot split due to insufficient funds!");
             }
             /*
             split can only happen with the initial 2 card hand,
             so the index hard code is okay
             */
-            let hand = this.getHand();
+            let hand = this.getMainHandArr();
             if (hand[0].getRank() != hand[1].getRank()) {
                 return false;
             }
 
+            splitHand = new Hand();
+            splitHand = splitHand.getHand();
+            splitPot = new Pot();
+
+            // TODO: implement visual notification for second bet
+
             let secondCard = hand.pop();
-            this.getSplitHand().push(secondCard());
+            splitHand.push(secondCard);
             console.log("split hand after splitting: ");
-            this.getSplitHand()[0].printCard();
+            splitHand[0].printCard();
 
             return false;
         };
@@ -460,13 +475,17 @@ class Player extends Hand {
         };
 
         this.fold = function() {
-            // forfeit all cards to dealer and lose bet
-            if (!playerTurn || this.getSplitHand() > 0) {
+            /**
+             * forfeit all cards to the dealer and lose the bet.
+             * cannot fold if player has a split hand, must play it out.
+             */
+            if (!playerTurn || this.getSplitHand() === undefined || this.getSplitHandArr().length > 0) {
                 return false;
             }
 
-            this.clearHand();
+            this.getMainHand().clearHand();
 
+            let pot = this.getMainPot();
             pot.subtract(pot.getTotal());
             folded = true;
 
@@ -506,7 +525,7 @@ class Player extends Hand {
         };
 
         this.deal = async () => {
-            if (roundStarted || pot.getTotal() < MIN_BET) {
+            if (roundStarted || this.getPot().getTotal() < MIN_BET) {
                 return false;
             }
 
@@ -539,49 +558,61 @@ class Player extends Hand {
 
             console.log("callback success");
             updateHand(PLAYER_HAND_ID);
+            updateSplitHand();
             counters.updateTotals();
+
             playerTurn = false;
             dealerTurn = true;
 
             return true;
         };
-
-        this.wonHand = function(hand=this.getHand()) {
-            let handTotal = hand.getHandTotal();
-            if (handTotal > WIN_THRESHOLD) {
-                return false;
-            }
-
-            return true;
-        };
-
-        this.wonSplitHand = function() {
-            return this.wonHand(this.getSplitHand());
-        };
     }
 }
 
 
-class Dealer extends Hand {
+class Dealer {
     constructor() {
-        super();
+        let hand = new Hand();
 
-        this.dealSelf = function() {
+        this.getHand = function() {
+            return hand;
+        };
+
+        this.getHandArr = function() {
+            return hand.getHand();
+        };
+
+        this.getHandTotal = function() {
+            return hand.getHandTotal();
+        };
+
+        this.flipCard = function(hand=this.getHandArr(), index=0) {
+            hand[index].classList.remove(FACE_DOWN);
+        };
+
+        this.dealSelf = function(faceDown=false) {
             let drawnCard = shoe.drawCard();
-            this.addToHand(drawnCard);
-            updateHand(DEALER_HAND_ID);
+
+            if (faceDown) {
+                drawnCard.classList.add(FACE_DOWN);
+            }
+
+            this.getHandArr().push(drawnCard);
+            updateDealerHand();
+            counters.updateTotals();
 
             dealerTurn = false;
             playerTurn = true;
+
             return true;
         };
 
         this.getPlayerChips = function() {
-            return player.getPlayerChips();
+            return player.getChips();
         };
 
-        this.takeChips = function(value=0) {
-            if (!player.subtract(value) || !pot.add(value)) {
+        this.takeChips = function(value=0, pot=player.getPot()) {
+            if (!player.subtractChips(value) || !pot.add(value)) {
                 return false;
             }
 
@@ -589,11 +620,15 @@ class Dealer extends Hand {
         };
 
         this.giveChips = function(value=0) {
-            if (!player.add(value)) {
+            if (!player.addChips(value)) {
                 return false;
             }
 
             return true;
+        };
+
+        this.printHandTotal = function() {
+            console.log("dealer hand total: ", this.getHandTotal());
         };
     }
 }
@@ -812,39 +847,57 @@ class Settings {
 
 
 class Counters {
-    constructor(dealer=null, player=null, pot=null, shoe=null) {
+    constructor(dealer=null, player=null, shoe=null) {
         // objects
         this.dealer = dealer;
         this.player = player;
-        this.pot = pot;
+        this.pot = this.player.getPot();
+        this.splitPot = this.player.getSplitPot();
         this.shoe = shoe;
 
         // elements
         this.playerChipCounter = document.getElementById("player-chips");
         this.potCounter = document.getElementById("pot");
+        this.splitPotWrapper = document.getElementById("split-pot-wrapper");
+        this.splitPotCounter = document.getElementById("split-pot");
         this.shoeCounter = document.getElementById("shoe-counter");
 
         this.updateTotals();
     }
 
-    updatePlayerTotals() {
-        if (this.playerChipCounter == null || this.potCounter == null) {
-            return;
+    toggleSplitPotCounter() {
+        if (this.splitPotWrapper.style.display == "none") {
+            this.splitPotWrapper.style.display = "flex";
         }
+        else {
+            this.splitPotWrapper.style.display = "none";
+        }
+    }
 
+    updateDealerTotals() {
+        // TODO: implement dealer total counter
+    }
+
+    updatePlayerTotals() {
         this.playerChipCounter.innerText = this.player.getChips();
         this.potCounter.innerText = this.pot.getTotal();
+
+        if (this.splitPot !== undefined && this.splitPotWrapper.style.display != "none") {
+            this.splitPotCounter.innerText = this.splitPot.getTotal();
+        }
     }
 
     updateShoeCounter() {
-        if (this.shoe == null) {
-            return;
+        if (this.shoe === undefined || this.shoe == null) {
+            return false;
         }
 
         this.shoeCounter.innerText = this.shoe.getShoe().length;
+        return true;
     }
 
     updateTotals() {
+        this.updateDealerTotals();
         this.updatePlayerTotals();
         this.updateShoeCounter();
     }
@@ -886,31 +939,20 @@ function createVisualCard(card) {
     return cardWrapper;
 }
 
-function updateHand(handId) {
+function updateHand(handId=PLAYER_HAND_ID) {
     let handWrapper = document.getElementById(handId);
-    let splitHandWrapper = document.getElementById("split-hand");
 
     while (handWrapper.firstChild) {
         handWrapper.removeChild(handWrapper.firstChild);
     }
 
-    if (splitHandWrapper.style.display != "none") {
-        while (splitHandWrapper.firstChild) {
-            splitHandWrapper.removeChild(splitHandWrapper.firstChild);
-        }
-    }
-
     let hand = undefined;
-    // TODO: splitHand
-    // TODO: put split hand in separate function
-    let splitHand = undefined;
 
     if (handId == PLAYER_HAND_ID) {
-        hand = player.getHand();
-        splitHand = player.getSplitHand();
+        hand = player.getHandArr();
     }
     else {
-        hand = dealer.getHand();
+        hand = dealer.getHandArr();
     }
 
     if (hand.length == 0) {
@@ -924,7 +966,29 @@ function updateHand(handId) {
         handWrapper.appendChild(cardWrapper);
     }
 
-    if (splitHand !== undefined) {
+    fanHand(handWrapper);
+}
+
+function updateSplitHand() {
+    // TODO: put into splitHand()
+    // uses different hand element, so must use a separate function instead of context switching
+    if (player.getSplitHand() === undefined) {
+        return;
+    }
+
+    let splitHandWrapper = document.getElementById(SPLIT_HAND_ID);
+
+    if (splitHandWrapper.style.display == "none") {
+        return;
+    }
+
+    while (splitHandWrapper.firstChild) {
+        splitHandWrapper.removeChild(splitHandWrapper.firstChild);
+    }
+
+    let splitHand = player.getSplitHandArr();
+
+    if (splitHand.length > 0) {
         for (let i = 0; i < splitHand.length; i++) {
             let card = splitHand[i];
 
@@ -933,17 +997,31 @@ function updateHand(handId) {
         }
     }
 
-    fanHand(handWrapper);
     fanHand(splitHandWrapper);
 }
 
-function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
+function updateDealerHand() {
+    updateHand(DEALER_HAND_ID);
+}
+
+function winCheck(dealer=undefined, player=undefined) {
+    if (dealer === undefined || player === undefined) {
+        return;
+    }
+
+    let dealerHand = dealer.getHand();
+    let playerHand = player.getHand();
+
+    let dealerHandTotal = dealer.getHandTotal();
+    let playerHandTotal = player.getHandTotal();
+
+    let pot = player.getPot();
     let potTotal = pot.getTotal();
     pot.subtract(potTotal);
 
-    if (dealer.isBust()) {
-        if (!player.isBust()) {
-            if (pTotal == WIN_THRESHOLD) {
+    if (dealerHand.isBust()) {
+        if (!playerHand.isBust()) {
+            if (playerHandTotal == WIN_THRESHOLD) {
                 // 3:2 payout (for every 2 chips, player will get 3 in return)
                 let wager = potTotal;
                 let halfOfWager = Math.floor(wager / 2);
@@ -963,13 +1041,13 @@ function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
         }
     }
     else {
-        if (player.isBust() || pTotal < dTotal) {
+        if (playerHand.isBust() || playerHandTotal < dealerHandTotal) {
             console.log("dealer wins!");
         }
-        else if (pTotal > dTotal) {
-            console.log("player has the higher hand!");
-            if (pTotal == WIN_THRESHOLD) {
+        else if (playerHandTotal > dealerHandTotal) {
+            if (playerHandTotal == WIN_THRESHOLD) {
                 // 3:2 payout (for every 2 chips, player will get 3 in return)
+                console.log("player blackjack!");
                 let wager = potTotal;
                 let halfOfWager = Math.floor(wager / 2);
 
@@ -979,11 +1057,12 @@ function winCheck(pTotal=player.getHandTotal(), dTotal=dealer.getHandTotal()) {
             }
             else {
                 // 1:1 payout
+                console.log("player has the higher hand!");
                 dealer.giveChips(potTotal * 2);
             }
         }
-        else if (pTotal == dTotal) {
-            if (pTotal == WIN_THRESHOLD) {
+        else if (playerHandTotal == dealerHandTotal) {
+            if (playerHandTotal == WIN_THRESHOLD) {
                 console.log("push with blackjack!");
                 // payout 3:2
                 let wager = potTotal;
@@ -1041,9 +1120,8 @@ let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
 
 let dealer = new Dealer();
 let player = new Player();
-let pot = new Pot();
 let shoe = new Shoe(2);
-let counters = new Counters(dealer, player, pot, shoe);
+let counters = new Counters(dealer, player, shoe);
 let playerActionButtons = new PlayerButtons();
 let roundStarted = false;
 let playerTurn = false;
@@ -1053,6 +1131,7 @@ let playerDecidedOnRestart = false;
 
 let start = async () => {
     // TODO: include player and dealer totals
+    // TODO: add set player turn function
 
     while (gameStarted) {
         roundStarted = false;
@@ -1067,66 +1146,61 @@ let start = async () => {
 
         // round start
         // initial deal to player and dealer
-        for (let i = 0; i < 2; i++) {
+        for (let _ = 0; _ < 2; _++) {
             playerTurn = true;
             setTimeout("player.action(player.hit())", 1000);
             await waitForAction(() => playerTurn == false);
-            counters.updateTotals();
+            // updateHand(PLAYER_HAND_ID);
+            // counters.updateTotals();
 
             // TODO: deal first card face down
             setTimeout("dealer.dealSelf()", 1000);
             await waitForAction(() => dealerTurn == false);
-            counters.updateTotals();
+            // counters.updateTotals();
         }
 
-        let pTotal = player.getHandTotal();
+        let playerHand = player.getHand();
+        let pTotal = playerHand.getHandTotal();
         let splitPTotal = undefined;
-        let splitHandWrapper = document.getElementById("split-hand");
-        while (!player.isBust() && !player.hasFolded() && !player.isStanding() && pTotal != WIN_THRESHOLD) {
+        while (!player.getMainHand().isBust() && !player.hasFolded() && !player.getMainHand().isStanding() && pTotal != WIN_THRESHOLD) {
             playerTurn = true;
             await waitForAction(() => playerTurn == false);
             console.log("player did action");
-            pTotal = player.getHandTotal();
-            player.printHandTotal();
+            pTotal = playerHand.getHandTotal();
+            playerHand.printHandTotal();
 
-            // if (player.getSplitHand().length > 0) {
-            //     playerTurn = true;
-            //     await waitForSplitHandAction(() => playerTurn == false);
-            //     console.log("player did split hand action!");
-            //     splitPTotal = player.getSplitHandTotal();
-            //     player.printSplitHandTotal();
-            // }
-
-            counters.updateTotals();
-
-            // if (pTotal == WIN_THRESHOLD) {
-            //     break;
-            // }
-            // if (splitPTotal !== undefined && (splitPTotal == WIN_THRESHOLD)) {
-            //     break;
-            // }
+            // TODO: split hand context switching
         }
 
         if (!player.hasFolded()) {
-            if (pTotal == WIN_THRESHOLD && player.getHand().length == 2) {
+            if (pTotal == WIN_THRESHOLD && player.getHandArr().length == 2) {
                 console.log("player hit natural blackjack!");
             }
+            if (splitPTotal !== undefined && splitPTotal == WIN_THRESHOLD && player.getSplitHandArr().length == 2) {
+                console.log("player hit natural blackjack on split hand!");
+            }
 
-            let dTotal = dealer.getHandTotal();
-            while (!dealer.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
+            let dealerHand = dealer.getHand();
+            let dTotal = dealerHand.getHandTotal();
+            while (!dealerHand.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
                 dealerTurn = true;
                 setTimeout("dealer.dealSelf()", 1000);
                 await waitForAction(() => dealerTurn == false);
-                dTotal = dealer.getHandTotal();
+                dTotal = dealerHand.getHandTotal();
                 dealer.printHandTotal();
-                counters.updateTotals();
+                // counters.updateTotals();
             }
 
             if (dTotal == WIN_THRESHOLD) {
                 console.log("dealer hit blackjack!");
             }
 
-            winCheck(pTotal, dTotal);
+            player.useMainHand();
+            winCheck(dealer, player);
+
+            // player.useSplitHand();
+            // winCheck(dealer, player);
+            // player.useMainHand();
         }
 
         roundStarted = false;
@@ -1134,31 +1208,47 @@ let start = async () => {
         let finishCleanup = false;
         // discard cards
         setTimeout(() => {
-            let dealerHand = document.getElementById("dealer-hand");
-            let playerHand = document.getElementById("player-hand");
+            let dealerHandWrapper = document.getElementById(DEALER_HAND_ID);
+            let playerHandWrapper = document.getElementById(PLAYER_HAND_ID);
+            let playerSplitHandWrapper = document.getElementById(SPLIT_HAND_ID);
 
-            dealer.clearHand();
-            dealer.unstand();
+            let dealerHand = dealer.getHand();
+            let playerHand = player.getHand();
+            let playerSplitHand = player.getSplitHand();
 
-            player.clearHand();
-            player.unstand();
+            dealerHand.clearHand();
+            dealerHand.unstand();
+
+            // TODO: clear split hand
+            playerHand.clearHand();
+            playerHand.unstand();
+            if (playerSplitHand !== undefined) {
+                playerSplitHand.clearHand();
+            }
             player.unfold();
 
-            while (dealerHand.firstChild) {
-                dealerHand.removeChild(dealerHand.firstChild);
+            while (dealerHandWrapper.firstChild) {
+                dealerHandWrapper.removeChild(dealerHandWrapper.firstChild);
             }
 
-            while (playerHand.firstChild) {
-                playerHand.removeChild(playerHand.firstChild);
+            while (playerHandWrapper.firstChild) {
+                playerHandWrapper.removeChild(playerHandWrapper.firstChild);
+            }
+
+            if (playerSplitHandWrapper.style.display != "none") {
+                while (playerSplitHandWrapper.firstChild) {
+                    playerSplitHandWrapper.removeChild(playerSplitHandWrapper.firstChild);
+                }
+                playerSplitHandWrapper.style.display = "none";
             }
 
             let dudCard = document.createElement("div");
             dudCard.className = "dud-card";
-            dealerHand.appendChild(dudCard);
+            dealerHandWrapper.appendChild(dudCard);
 
             dudCard = document.createElement("div");
             dudCard.className = "dud-card";
-            playerHand.appendChild(dudCard);
+            playerHandWrapper.appendChild(dudCard);
 
             counters.updateTotals();
             finishCleanup = true;
@@ -1176,7 +1266,7 @@ let start = async () => {
         }
         else {
             cashout();
-            // game over screen
+            // TODO: implement game over screen
         }
     }
 }
