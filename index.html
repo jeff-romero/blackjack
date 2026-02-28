@@ -6,7 +6,6 @@
         <link rel="stylesheet" type="text/css" href="blackjack.css"/>
     </head>
     <body id="page-wrapper">
-        <div id="second"></div>
         <div id="dealer-space">
             <div id="settings-wrapper">
                 <button
@@ -23,11 +22,14 @@
             </div>
         </div>
         <div id="player-space">
-            <div class="hand-wrapper" id="player-hand">
-                <div class="dud-card"></div>
+            <div class="player-hands">
+                <div class="hand-wrapper" id="player-hand">
+                    <div class="dud-card"></div>
+                </div>
+                <div class="split-hand-wrapper" id="split-hand"></div>
             </div>
             <div id="counters-controls-wrapper">
-                <div id="counters">
+                <div id="counters-wrapper">
                     <div class="counter">
                         <p class="counter-value" id="player-chips">0</p>
                         <p class="counter-caption">PLAYER CHIPS</p>
@@ -55,6 +57,15 @@
                             class="chip"
                             id="chip-500">500</button>
                     </div>
+                    <div class="stacked-button-wrapper">
+                        <button
+                            class="action"
+                            id="all-in">ALL IN</button>
+                        <button
+                            class="action"
+                            id="deal"
+                            onclick="player.deal()">DEAL</button>
+                    </div>
                     <div id="player-actions">
                         <button
                             class="action"
@@ -76,15 +87,6 @@
                             class="action"
                             id="fold"
                             onclick="player.action(player.fold())">FOLD</button>
-                    </div>
-                    <div class="stacked-button-wrapper">
-                        <button
-                            class="action"
-                            id="all-in">ALL IN</button>
-                        <button
-                            class="action"
-                            id="deal"
-                            onclick="player.deal()">DEAL</button>
                     </div>
                 </div>
             </div>
