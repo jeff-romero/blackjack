@@ -273,7 +273,13 @@ class Hand {
 
         this.stand = function() {
             // take no more cards during turn
-            if (!standing) {
+
+            // asking for player bet after split
+            if (hand.length <= 1) {
+                return false;
+            }
+            else if (!standing) {
+                console.log("standing");
                 standing = true;
             }
             return true;
@@ -311,7 +317,7 @@ class Player {
     constructor() {
         let hand = new Hand();
         let pot = new Pot();
-        let splitHand = undefined
+        let splitHand = undefined;
         let splitPot = undefined;
 
         let currentHand = hand;
@@ -437,33 +443,45 @@ class Player {
         };
 
         this.split = function() {
-            if (!playerTurn || this.getMainHandArr().length > 2) {
+            /**
+             * this.getMainHandArr() == 1
+             * means the array was just split and is waiting for a new player bet on
+             * the second hand
+             * 
+             * (splitHand !== undefined && splitHand.getHand().length == 2)
+             * means the player has already split, bet, and is currently working on the main hand
+             */
+            if (!playerTurn || this.getMainHandArr().length > 2 || this.getMainHandArr().length == 1 || (splitHand !== undefined && splitHand.getHand().length == 2)) {
+                console.log("cannot split");
                 return false;
             }
             else if (total < MIN_BET) {
                 // TODO: implement visual notification that player cannot split
                 console.log("player cannot split due to insufficient funds!");
+                return false;
             }
+            console.log("splitting");
             /*
             split can only happen with the initial 2 card hand,
             so the index hard code is okay
             */
             let hand = this.getMainHandArr();
             if (hand[0].getRank() != hand[1].getRank()) {
-                return false;
+                // TODO: uncomment after testing
+                // return false;
             }
 
             splitHand = new Hand();
             splitPot = new Pot();
 
-            // TODO: implement visual notification for second bet
+            let secondCard = hand.pop();
+            splitHand.getHand().push(secondCard);
+            console.log("main hand after splitting:");
+            hand[0].printCard();
+            console.log("split hand after splitting:");
+            splitHand.getHand()[0].printCard();
 
-            let secondCard = this.getHand().pop();
-            this.getSplitHand().push(secondCard);
-            console.log("split hand after splitting: ");
-            this.getSplitHand()[0].printCard();
-
-            return false;
+            return true;
         };
 
         this.hasFolded = function() {
@@ -485,10 +503,11 @@ class Player {
              * forfeit all cards to the dealer and lose the bet.
              * cannot fold if player has a split hand, must play it out.
              */
-            if (!playerTurn || this.getSplitHand() === undefined || this.getSplitHandArr().length > 0) {
+            if (!playerTurn || this.getHand().length == 0 || (this.getSplitHand() === undefined && this.getSplitHandArr().length > 0)) {
                 return false;
             }
 
+            console.log("folding");
             this.getMainHand().clearHand();
 
             let pot = this.getMainPot();
@@ -531,19 +550,16 @@ class Player {
         };
 
         this.deal = async () => {
-            if (roundStarted || this.getPot().getTotal() < MIN_BET) {
+            /**
+             * !roundStarted && didBet
+             * means cleanup has occurred, so player can't intervene
+             */
+            if ((roundStarted && didBet) || (!roundStarted && didBet) || this.getPot().getTotal() < MIN_BET) {
                 return false;
             }
 
-            // let playerChips = document.getElementById("chip-button-wrapper");
-            // playerChips.style.animationPlayState = "running";
-            // wait for the animation to finish
-            // await this.removePlayerChipBtns(() => playerChips.style.display == "none");
-
-            // this.addPlayerActionBtns();
-            // this.removeAllInBtn();
-
             roundStarted = true;
+            didBet = true;
 
             return true;
         };
@@ -563,14 +579,16 @@ class Player {
             }
 
             console.log("callback success");
-            updateHand(PLAYER_HAND_ID);
-            updateSplitHand();
-            counters.updateTotals();
 
             playerTurn = false;
             dealerTurn = true;
 
             return true;
+        };
+
+        this.cleanup = function() {
+            splitHand = undefined;
+            splitPot = undefined;
         };
     }
 }
@@ -596,12 +614,8 @@ class Dealer {
             hand[index].classList.remove(FACE_DOWN);
         };
 
-        this.dealSelf = function(faceDown=false) {
+        this.dealSelf = function() {
             let drawnCard = shoe.drawCard();
-
-            if (faceDown) {
-                drawnCard.classList.add(FACE_DOWN);
-            }
 
             this.getHandArr().push(drawnCard);
             updateDealerHand();
@@ -619,6 +633,7 @@ class Dealer {
 
         this.takeChips = function(value=0, pot=player.getPot()) {
             if (!player.subtractChips(value) || !pot.add(value)) {
+                console.log("dealer couldn't take chips");
                 return false;
             }
 
@@ -724,7 +739,12 @@ class Chip {
         });
 
         chip.addEventListener("click", (e) => {
-            if (roundStarted || !dealer.takeChips(value, player.getPot())) {
+            /**
+             * !roundStarted && didBet
+             * means cleanup has occurred, so player can't intervene
+             */
+            if ((roundStarted && didBet) || (!roundStarted && didBet) || !dealer.takeChips(value, player.getPot())) {
+                console.log("couldn't take player chips");
                 return;
             }
 
@@ -828,7 +848,11 @@ class PlayerButtons {
         }
 
         allIn.addEventListener("click", () => {
-            if (roundStarted || !dealer.takeChips(player.getChips(), player.getPot())) {
+            /**
+             * !roundStarted && didBet
+             * means cleanup has occurred, so player can't intervene
+             */
+            if ((roundStarted && didBet) || (!roundStarted && didBet) || !dealer.takeChips(player.getChips(), player.getPot())) {
                 return;
             }
 
@@ -858,6 +882,7 @@ class Counters {
         this.dealer = dealer;
         this.player = player;
         this.pot = this.player.getPot();
+        // TODO: prob delete
         this.splitPot = this.player.getSplitPot();
         this.shoe = shoe;
 
@@ -888,8 +913,9 @@ class Counters {
         this.playerChipCounter.innerText = this.player.getChips();
         this.potCounter.innerText = this.pot.getTotal();
 
-        if (this.splitPot !== undefined && this.splitPotWrapper.style.display != "none") {
-            this.splitPotCounter.innerText = this.splitPot.getTotal();
+        if (this.player.getSplitPot() !== undefined) {
+            console.log("updating split pot counter");
+            this.splitPotCounter.innerText = this.player.getSplitPot().getTotal();
         }
     }
 
@@ -906,6 +932,59 @@ class Counters {
         this.updateDealerTotals();
         this.updatePlayerTotals();
         this.updateShoeCounter();
+    }
+}
+
+
+class Node {
+    constructor(data=undefined) {
+        this.dta = data;
+        this.nxt = null;
+    }
+
+    get data() {
+        return this.dta;
+    }
+
+    get next() {
+        return this.next;
+    }
+
+    set data(data=undefined) {
+        this.dta = data;
+    }
+
+    set next(next=null) {
+        this.nxt = next;
+    }
+
+    hasNext() {
+        return this.next != null;
+    }
+}
+
+
+class Log {
+    constructor() {
+        this.root = null;
+    }
+
+    get firstLog() {
+        return this.root;
+    }
+
+    log(message="") {
+        if (typeof message !== "string" || !(message instanceof String)) {
+            return;
+        }
+
+        if (this.root == null) {
+            this.root = new Node(message);
+        }
+        else {
+            let newNode = new Node(message);
+            newNode.next = this.root;
+        }
     }
 }
 
@@ -980,8 +1059,11 @@ function updateSplitHand() {
     // uses different hand element, so must use a separate function instead of context switching
     let splitHandWrapper = document.getElementById(SPLIT_HAND_ID);
 
-    if (player.getSplitHand() === undefined || splitHandWrapper.style.display == "none" || splitHandWrapper.style.display === undefined) {
+    if (player.getSplitHand() === undefined) {
         return;
+    }
+    else if (player.getSplitHandArr().length == 1) {
+        splitHandWrapper.style.display = "flex";
     }
 
     while (splitHandWrapper.firstChild) {
@@ -1126,6 +1208,7 @@ let shoe = new Shoe(2);
 let counters = new Counters(dealer, player, shoe);
 let playerActionButtons = new PlayerButtons();
 let roundStarted = false;
+let didBet = false;
 let playerTurn = false;
 let dealerTurn = false;
 let gameStarted = true;
@@ -1144,6 +1227,7 @@ let start = async () => {
 
         // wait for player bet
         await waitForAction(() => roundStarted == true);
+        didBet = true;
         console.log("starting round");
 
         // round start
@@ -1152,39 +1236,78 @@ let start = async () => {
             playerTurn = true;
             setTimeout("player.action(player.hit())", 1000);
             await waitForAction(() => playerTurn == false);
-            // updateHand(PLAYER_HAND_ID);
-            // counters.updateTotals();
+            updateHand(PLAYER_HAND_ID);
+            counters.updateTotals();
 
             // TODO: deal first card face down
             setTimeout("dealer.dealSelf()", 1000);
             await waitForAction(() => dealerTurn == false);
-            // counters.updateTotals();
         }
 
-        let playerHand = player.getHand();
-        let pTotal = playerHand.getHandTotal();
+        let pTotal = player.getHand().getHandTotal();
         let splitPTotal = undefined;
         while (!player.getHand().isBust() && !player.hasFolded() && !player.getHand().isStanding() && pTotal != WIN_THRESHOLD) {
             playerTurn = true;
             await waitForAction(() => playerTurn == false);
-            console.log("player did action");
-            pTotal = playerHand.getHandTotal();
-            playerHand.printHandTotal();
+            updateHand(PLAYER_HAND_ID);
+            updateSplitHand();
+            counters.updateTotals();
 
-            // TODO: split hand context switching
+            console.log("player did action");
+            pTotal = player.getHand().getHandTotal();
+            player.getHand().printHandTotal();
+
             // set up two starting hands each with 2 cards after splitting
             if (player.getHandArr().length == 1) {
+                console.log("setting up 2 new starting hands");
 
+                // TODO: implement visual notification for second bet
+                document.getElementById("split-pot-wrapper").style.display = "flex";
+                player.useSplitPot();
+                didBet = false;
+                await waitForAction(() => didBet == true);
+                console.log("player did second bet");
+                player.useMainPot();
+
+                // setTimeout("player.hit()", 1000);
+                // player.hit();
+                player.getHandArr().push(shoe.drawCard());
+                pTotal = player.getHand().getHandTotal();
+
+                player.useSplitHand();
+                // player.hit();
+                player.getHandArr().push(shoe.drawCard());
+                splitPTotal = player.getHand().getHandTotal();
+                player.useMainHand();
+
+                console.log("player main hand:");
+                player.getHand().printHand();
+                console.log("player split hand");
+                player.getSplitHand().printHand();
+
+                console.log("updating visual");
+                updateHand(PLAYER_HAND_ID);
+                updateSplitHand();
+                counters.updateTotals();
             }
         }
 
-        if (player.getSplitHand() !== undefined && player.getSplitPot() !== undefined) {
+        if (player.getSplitHand() !== undefined) {
+            console.log("doing play on split hand");
             player.useSplitHand();
             player.useSplitPot();
             splitPTotal = player.getHand().getHandTotal();
 
             while (!player.getHand().isBust() && !player.hasFolded() && !player.getHand().isStanding() && splitPTotal != WIN_THRESHOLD) {
+                playerTurn = true;
+                await waitForAction(() => playerTurn == false);
+                updateSplitHand();
+                counters.updateTotals();
 
+                console.log("player did action on split hand");
+                splitPTotal = player.getHand().getHandTotal();
+                console.log("split hand total:");
+                player.getHand().printHandTotal();
             }
 
             player.useMainHand();
@@ -1217,9 +1340,13 @@ let start = async () => {
             player.useMainHand();
             winCheck(dealer, player);
 
-            // player.useSplitHand();
-            // winCheck(dealer, player);
-            // player.useMainHand();
+            if (player.getSplitHand() !== undefined) {
+                player.useSplitHand();
+                player.useSplitPot();
+                winCheck(dealer, player);
+                player.useMainHand();
+                player.useSplitPot();
+            }
         }
 
         roundStarted = false;
@@ -1227,6 +1354,7 @@ let start = async () => {
         let finishCleanup = false;
         // discard cards
         setTimeout(() => {
+            console.log("starting cleanup");
             let dealerHandWrapper = document.getElementById(DEALER_HAND_ID);
             let playerHandWrapper = document.getElementById(PLAYER_HAND_ID);
             let playerSplitHandWrapper = document.getElementById(SPLIT_HAND_ID);
@@ -1243,6 +1371,10 @@ let start = async () => {
             playerHand.unstand();
             if (playerSplitHand !== undefined) {
                 playerSplitHand.clearHand();
+                playerSplitHand.unstand();
+                // TODO: put more in the cleanup
+                player.cleanup();
+                document.getElementById("split-pot-wrapper").style.display = "none";
             }
             player.unfold();
 
@@ -1275,7 +1407,7 @@ let start = async () => {
 
         await waitForAction(() => finishCleanup == true);
 
-        console.log("ready to start a new round");
+        console.log("finished cleanup. ready to start a new round");
 
         if (player.getChips() > 0 && !shoe.isEmpty()) {
             togglePlayAgain();
