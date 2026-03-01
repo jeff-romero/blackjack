@@ -124,6 +124,32 @@ img {
     content: "";
 }
 
+.flipped-card {
+    position: relative;
+    width: 8vw;
+    height: 11vw;
+    background-image: repeating-linear-gradient(red 2%, white 4%, red 6%);
+}
+.flipped-card::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-image: repeating-linear-gradient(90deg, red 2%, white 4%, red 6%);
+    border: 0.1vw solid white;
+    opacity: 0.5;
+}
+.flipped-card::after {
+    position: absolute;
+    content: "";
+    width: 50%;
+    height: 50%;
+    transform: translate(50%, 50%);
+    background-image: repeating-linear-gradient(90deg, red 2%, white 4%, red 6%);
+    border: 0.25vw solid white;
+    /* opacity: 0.5; */
+}
+
 #counters-controls-wrapper {
     position: relative;
     display: flex;
