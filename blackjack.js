@@ -288,6 +288,13 @@ class Hand {
         this.isEmpty = function() {
             return hand.length == 0;
         };
+
+        this.printHand = function() {
+            console.log("printing hand:");
+            for (let i = 0; i < hand.length; i++) {
+                hand[i].printCard();
+            }
+        };
     }
 }
 
@@ -447,15 +454,14 @@ class Player {
             }
 
             splitHand = new Hand();
-            splitHand = splitHand.getHand();
             splitPot = new Pot();
 
             // TODO: implement visual notification for second bet
 
-            let secondCard = hand.pop();
-            splitHand.push(secondCard);
+            let secondCard = this.getHand().pop();
+            this.getSplitHand().push(secondCard);
             console.log("split hand after splitting: ");
-            splitHand[0].printCard();
+            this.getSplitHand()[0].printCard();
 
             return false;
         };
@@ -718,7 +724,7 @@ class Chip {
         });
 
         chip.addEventListener("click", (e) => {
-            if (roundStarted || !dealer.takeChips(value)) {
+            if (roundStarted || !dealer.takeChips(value, player.getPot())) {
                 return;
             }
 
@@ -822,7 +828,7 @@ class PlayerButtons {
         }
 
         allIn.addEventListener("click", () => {
-            if (roundStarted || !dealer.takeChips(player.getChips())) {
+            if (roundStarted || !dealer.takeChips(player.getChips(), player.getPot())) {
                 return;
             }
 
@@ -966,19 +972,15 @@ function updateHand(handId=PLAYER_HAND_ID) {
         handWrapper.appendChild(cardWrapper);
     }
 
-    fanHand(handWrapper);
+    // fanHand(handWrapper);
 }
 
 function updateSplitHand() {
     // TODO: put into splitHand()
     // uses different hand element, so must use a separate function instead of context switching
-    if (player.getSplitHand() === undefined) {
-        return;
-    }
-
     let splitHandWrapper = document.getElementById(SPLIT_HAND_ID);
 
-    if (splitHandWrapper.style.display == "none") {
+    if (player.getSplitHand() === undefined || splitHandWrapper.style.display == "none" || splitHandWrapper.style.display === undefined) {
         return;
     }
 
@@ -997,7 +999,7 @@ function updateSplitHand() {
         }
     }
 
-    fanHand(splitHandWrapper);
+    // fanHand(splitHandWrapper);
 }
 
 function updateDealerHand() {
@@ -1012,8 +1014,8 @@ function winCheck(dealer=undefined, player=undefined) {
     let dealerHand = dealer.getHand();
     let playerHand = player.getHand();
 
-    let dealerHandTotal = dealer.getHandTotal();
-    let playerHandTotal = player.getHandTotal();
+    let dealerHandTotal = dealerHand.getHandTotal();
+    let playerHandTotal = playerHand.getHandTotal();
 
     let pot = player.getPot();
     let potTotal = pot.getTotal();
@@ -1162,7 +1164,7 @@ let start = async () => {
         let playerHand = player.getHand();
         let pTotal = playerHand.getHandTotal();
         let splitPTotal = undefined;
-        while (!player.getMainHand().isBust() && !player.hasFolded() && !player.getMainHand().isStanding() && pTotal != WIN_THRESHOLD) {
+        while (!player.getHand().isBust() && !player.hasFolded() && !player.getHand().isStanding() && pTotal != WIN_THRESHOLD) {
             playerTurn = true;
             await waitForAction(() => playerTurn == false);
             console.log("player did action");
@@ -1170,6 +1172,23 @@ let start = async () => {
             playerHand.printHandTotal();
 
             // TODO: split hand context switching
+            // set up two starting hands each with 2 cards after splitting
+            if (player.getHandArr().length == 1) {
+
+            }
+        }
+
+        if (player.getSplitHand() !== undefined && player.getSplitPot() !== undefined) {
+            player.useSplitHand();
+            player.useSplitPot();
+            splitPTotal = player.getHand().getHandTotal();
+
+            while (!player.getHand().isBust() && !player.hasFolded() && !player.getHand().isStanding() && splitPTotal != WIN_THRESHOLD) {
+
+            }
+
+            player.useMainHand();
+            player.useMainPot();
         }
 
         if (!player.hasFolded()) {
