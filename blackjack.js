@@ -467,8 +467,7 @@ class Player {
             */
             let hand = this.getMainHandArr();
             if (hand[0].getRank() != hand[1].getRank()) {
-                // TODO: uncomment after testing
-                // return false;
+                return false;
             }
 
             splitHand = new Hand();
