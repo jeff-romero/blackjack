@@ -49,7 +49,7 @@ class Pot {
 
 
 class Card {
-    constructor(suit, rank) {
+    constructor(suit, rank, flipped=false) {
         // used to get the className
         const RANK_MAP = {
             "2": "two",
@@ -84,6 +84,7 @@ class Card {
 
         let s = suit;
         let r = rank;
+        let __flipped = flipped;
 
         this.getCard = function() {
             return this;
@@ -115,6 +116,19 @@ class Card {
             cName = RANK_MAP[this.getRank()] + "-of-" + this.getSuit();
 
             return cName;
+        };
+
+        this.isFlipped = function() {
+            return __flipped;
+        };
+
+        this.flip = function() {
+            if (__flipped) {
+                __flipped = false;
+            }
+            else {
+                __flipped = true;
+            }
         };
     }
 }
@@ -613,8 +627,12 @@ class Dealer {
             hand[index].classList.remove(FACE_DOWN);
         };
 
-        this.dealSelf = function() {
+        this.dealSelf = function(flipped=false) {
             let drawnCard = shoe.drawCard();
+
+            if (flipped) {
+                drawnCard.flip();
+            }
 
             this.getHandArr().push(drawnCard);
             updateDealerHand();
@@ -935,55 +953,139 @@ class Counters {
 }
 
 
+class Message {
+    constructor(hours=0, minutes=0, seconds=0, message="") {
+        this.__hours = hours;
+        this.__minutes = minutes;
+        this.__seconds = seconds;
+        this.__timeString = `[${this.timeToString(this.__hours)}:${this.timeToString(this.__minutes)}:${this.timeToString(this.__seconds)}]`;
+        this.__message = message;
+    }
+
+    get hours() {
+        return this.__hours;
+    }
+
+    get minutes() {
+        return this.__minutes;
+    }
+
+    get seconds() {
+        return this.__seconds;
+    }
+
+    get timeString() {
+        return this.__timeString;
+    }
+
+    get message() {
+        return this.__message;
+    }
+
+    timeToString(time=0) {
+        let s = "" + time;
+        return s.padStart(2, "0");
+    }
+}
+
+
+/**
+ * nodes will contain a message
+ * nodes are kept in memory so log can be retrieved any time during gameplay loop
+ */
 class Node {
     constructor(data=undefined) {
-        this.dta = data;
-        this.nxt = null;
+        this.__data = data;
+        this.__next = null;
     }
 
     get data() {
-        return this.dta;
+        return this.__data;
     }
 
     get next() {
-        return this.next;
+        return this.__next;
     }
 
     set data(data=undefined) {
-        this.dta = data;
+        this.__data = data;
     }
 
     set next(next=null) {
-        this.nxt = next;
+        this.__next = next;
     }
 
     hasNext() {
-        return this.next != null;
+        return this.__next != null;
     }
 }
 
 
 class Log {
     constructor() {
-        this.root = null;
+        this.logWrapper = document.getElementById("log");
+        this.__root = null;
+        this.date = new Date();
     }
 
-    get firstLog() {
-        return this.root;
+    get root() {
+        return this.__root;
+    }
+
+    set root(newRoot=null) {
+        this.__root = newRoot;
+    }
+
+    get length() {
+        let len = 0;
+        while (this.root != null) {
+            len++;
+            this.root = this.root.next;
+        }
+        return len;
     }
 
     log(message="") {
-        if (typeof message !== "string" || !(message instanceof String)) {
-            return;
-        }
-
         if (this.root == null) {
-            this.root = new Node(message);
+            this.root = new Node();
         }
         else {
-            let newNode = new Node(message);
+            // append to the beginning of the linked list
+            let newNode = new Node();
             newNode.next = this.root;
+            this.root = newNode;
         }
+
+        // save memory by overwriting date object
+        this.date = new Date();
+        this.root.data = new Message(
+            this.date.getHours(),
+            this.date.getMinutes(),
+            this.date.getSeconds(),
+            message
+        );
+
+        // add the message to the log
+        let newMessage = document.createElement("div");
+        newMessage.className = "message";
+        let messageTime = document.createElement("span");
+        messageTime.className = "message-time";
+        let messageContent = document.createElement("p");
+        messageContent.className = "message-content";
+
+        messageTime.innerText = this.root.data.timeString;
+        messageContent.innerText = this.root.data.message;
+
+        newMessage.appendChild(messageTime);
+        newMessage.appendChild(messageContent);
+        this.logWrapper.appendChild(newMessage);
+    }
+
+    clearLog() {
+        while (this.logWrapper.firstChild) {
+            this.logWrapper.removeChild(this.logWrapper.firstChild);
+        }
+        console.log("log has been cleared");
     }
 }
 
@@ -1008,15 +1110,20 @@ function fanHand(handWrapper) {
 }
 
 function createVisualCard(card) {
-    let cName = card.getClassName();
+    // TODO: remove wrapper, just use img
     let cardWrapper = document.createElement("div");
     cardWrapper.className = "card";
 
     let viCard = document.createElement("img");
-    viCard.className = cName;
     let rank = card.getRank();
     let suit = card.getSuit();
-    viCard.src = "assets/images/" + suit + "/" + rank + "-of-" + suit + ".png";
+
+    if (card.isFlipped()) {
+        viCard.src = "assets/images/card-back.png";
+    }
+    else {
+        viCard.src = "assets/images/" + suit + "/" + rank + "-of-" + suit + ".png";
+    }
 
     cardWrapper.appendChild(viCard);
 
@@ -1201,6 +1308,7 @@ let waitForAction = (condition, ms=DEFAULT_CHECK_INTERVAL) => {
 };
 
 
+let log = new Log();
 let dealer = new Dealer();
 let player = new Player();
 let shoe = new Shoe(2);
@@ -1224,14 +1332,14 @@ let start = async () => {
         playerDecidedOnRestart = false;
         shoe.shuffleShoe(MIN_SHUFFLES);
 
-        // wait for player bet
+        log.log("Waiting for player bet...");
         await waitForAction(() => roundStarted == true);
         didBet = true;
-        console.log("starting round");
+        log.log("Starting round.");
 
         // round start
         // initial deal to player and dealer
-        for (let _ = 0; _ < 2; _++) {
+        for (let i = 0; i < 2; i++) {
             playerTurn = true;
             setTimeout("player.action(player.hit())", 1000);
             await waitForAction(() => playerTurn == false);
@@ -1239,7 +1347,14 @@ let start = async () => {
             counters.updateTotals();
 
             // TODO: deal first card face down
-            setTimeout("dealer.dealSelf()", 1000);
+            setTimeout(() => {
+                if (i == 0) {
+                    dealer.dealSelf(true);
+                }
+                else {
+                    dealer.dealSelf();
+                }
+            }, 1000);
             await waitForAction(() => dealerTurn == false);
         }
 
@@ -1322,6 +1437,7 @@ let start = async () => {
             }
 
             let dealerHand = dealer.getHand();
+            dealerHand.getHand()[0].flip();
             let dTotal = dealerHand.getHandTotal();
             while (!dealerHand.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
                 dealerTurn = true;
