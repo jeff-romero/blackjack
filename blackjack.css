@@ -448,7 +448,7 @@ button.action {
     padding: 0.3vw;
     overflow-y: scroll;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 1vw;
 }
 
