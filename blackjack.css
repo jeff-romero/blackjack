@@ -71,8 +71,8 @@
 .hand-wrapper {
     position: relative;
     display: flex;
-    /* border: 0.1vw solid black; */
-    /* border-radius: 0.5vw; */
+    border: 0.1vw solid black;
+    border-radius: 0.5vw;
     margin: 1vw;
     /* scale: 2; */
 }
@@ -137,7 +137,7 @@ img {
     height: 100%;
     background-image: repeating-linear-gradient(90deg, red 2%, white 4%, red 6%);
     border: 0.1vw solid white;
-    opacity: 0.5;
+    /* opacity: 0.5; */
 }
 .flipped-card::after {
     position: absolute;
@@ -200,9 +200,9 @@ p.counter-caption {
     z-index: 1;
     background-color: rgba(0, 0, 0, 0.8);
     justify-content: center;
-    gap: 2vw;
+    gap: 3.5vw;
     padding-block: 1vw;
-    /* padding-inline: 0.5vw; */
+    /* padding-inline: 1vw; */
 }
 
 #chip-button-wrapper {
@@ -422,4 +422,47 @@ button.action {
 
 .popup-button {
     padding: 0.3vw;
+}
+
+#log-wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 13vw;
+    height: 15vw;
+    display: flex;
+    flex-direction: column;
+    border: 0.3vw solid black;
+    background-color: rgba(37, 37, 37, 0.8);
+    color: white;
+}
+
+#log-header {
+    position: relative;
+    text-align: center;
+    background-color: rgb(128, 128, 128, 0.8);
+}
+
+#log {
+    position: relative;
+    padding: 0.3vw;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1vw;
+}
+
+.message {
+    display: flex;
+    gap: 1vw;
+    text-overflow: ellipsis;
+    /* background-color: rgb(0, 0, 0, 0.8); */
+}
+
+.message-time {
+    font-size: 0.725rem;
+}
+
+.message-content {
+    font-size: 0.85rem;
 }

@@ -20,6 +20,12 @@
             <div class="hand-wrapper" id="dealer-hand">
                 <div class="dud-card"></div>
             </div>
+            <div id="log-wrapper">
+                <p id="log-header">
+                    LOG
+                </p>
+                <div id="log"></div>
+            </div>
         </div>
         <div id="player-space">
             <div class="player-hands">
@@ -68,7 +74,7 @@
                         <button
                             class="action"
                             id="deal"
-                            onclick="player.deal()">DEAL</button>
+                            onclick="player.deal()">BET</button>
                     </div>
                     <div id="player-actions">
                         <button
@@ -78,7 +84,7 @@
                         <button
                             class="action"
                             id="stand"
-                            onclick="player.action(player.getHand().stand())">STAND</button>
+                            onclick="player.action(player.currentHand.stand())">STAND</button>
                         <button
                             class="action"
                             id="double-down"
