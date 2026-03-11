@@ -18,6 +18,9 @@ const HARD_STAND_THRESHOLD = 17;
 const ACE_HIGH = 11;
 const ACE_LOW = 1;
 const DEFAULT_CHECK_INTERVAL = 100;
+const DEALER_NAME = "DEALER";
+const PLAYER_NAME = "PLAYER";
+const NO_WINNER = "NO ONE";
 
 
 class Pot {
@@ -140,11 +143,11 @@ class Card {
     }
 
     flip() {
-        if (this.flipped) {
-            this.flipped = false;
+        if (this.__flipped) {
+            this.__flipped = false;
         }
         else {
-            this.flipped = true;
+            this.__flipped = true;
         }
     }
 }
@@ -566,6 +569,7 @@ class Player {
 
         let drawnCard = shoe.drawCard();
         this.__currentHand.push(drawnCard);
+        log.log("Player has hit.");
 
         return true;
     }
@@ -589,6 +593,7 @@ class Player {
             log.log("Player cannot double down!");
             return false;
         }
+        log.log("Player has doubled down.");
 
         return true;
     }
@@ -629,6 +634,8 @@ class Player {
             return false;
         }
 
+        disableAllPlayerButtons();
+
         this.__splitHand = new Hand();
         this.__splitPot = new Pot();
 
@@ -638,6 +645,8 @@ class Player {
         this.__hand.print();
         console.log("split hand after splitting:");
         this.__splitHand.print();
+
+        log.log("Player has split.");
 
         return true;
     }
@@ -666,6 +675,7 @@ class Player {
         this.__hand.clearHand();
         this.__pot.subtract(this.__pot.total);
         this.__folded = true;
+        log.log("Player has folded.");
 
         return true;
     }
@@ -690,6 +700,8 @@ class Player {
             return false;
         }
 
+        disablePlayerBetButtons();
+
         roundStarted = true;
         didBet = true;
 
@@ -708,6 +720,10 @@ class Player {
         else if (!callback) {
             console.log("callback failure");
             return false;
+        }
+
+        if (this.__currentHand.isStanding()) {
+            log.log("Player stands.");
         }
 
         console.log("callback success");
@@ -734,6 +750,21 @@ class Dealer {
 
     get hand() {
         return this.__hand;
+    }
+
+    dealPlayer(player=null) {
+        let drawnCard = shoe.drawCard();
+
+        if (!player) {
+            return false;
+        }
+
+        player.currentHand.push(drawnCard);
+
+        playerTurn = false;
+        dealerTurn = true;
+
+        return true;
     }
 
     dealSelf(flipped=false) {
@@ -976,6 +1007,7 @@ class PlayerButtons {
                 return;
             }
 
+            disablePlayerBetButtons();
             counters.updateTotals();
             player.deal();
         });
@@ -1289,6 +1321,7 @@ function updateDealerHand() {
 
 function winCheck(dealer=null, player=null) {
     if (dealer == null || player == null) {
+        console.error("null value provided for dealer or player");
         return;
     }
 
@@ -1301,6 +1334,9 @@ function winCheck(dealer=null, player=null) {
     let pot = player.pot;
     let potTotal = pot.total;
     pot.subtract(potTotal);
+    let payout = 0;
+
+    log.log(`Player hand: ${playerHandTotal}, dealer hand: ${dealerHandTotal}`);
 
     if (dealerHand.isBust()) {
         if (!playerHand.isBust()) {
@@ -1308,72 +1344,116 @@ function winCheck(dealer=null, player=null) {
                 // 3:2 payout (for every 2 chips, player will get 3 in return)
                 let wager = potTotal;
                 let halfOfWager = Math.floor(wager / 2);
-
-                // TODO: check
-                console.log("payout: ", (wager + halfOfWager));
-                dealer.giveChips(wager + halfOfWager);
+                payout = wager + halfOfWager;
+                log.log(`Player blackjack! Payout: ${payout}`);
             }
             else {
-                console.log("dealer bust so player wins!");
                 // 1:1 payout
-                dealer.giveChips(potTotal * 2);
+                payout = potTotal * 2;
+                log.log(`Dealer bust. Player wins! Payout: ${payout}`);
             }
+            setWinner(PLAYER_NAME);
         }
         else {
-            console.log("both dealer and player bust!");
+            log.log("Both dealer and player bust!");
+            setWinner(NO_WINNER);
         }
     }
     else {
-        if (playerHand.isBust() || playerHandTotal < dealerHandTotal) {
-            console.log("dealer wins!");
+        if (playerHand.isBust()) {
+            log.log("Player busts!");
+            setWinner(DEALER_NAME);
+        }
+        else if (playerHandTotal < dealerHandTotal) {
+            log.log("Dealer has the higher hand. Dealer wins!");
+            setWinner(DEALER_NAME);
         }
         else if (playerHandTotal > dealerHandTotal) {
             if (playerHandTotal == WIN_THRESHOLD) {
                 // 3:2 payout (for every 2 chips, player will get 3 in return)
-                console.log("player blackjack!");
                 let wager = potTotal;
                 let halfOfWager = Math.floor(wager / 2);
-
-                // TODO: check
-                console.log("payout: ", (wager + halfOfWager));
-                dealer.giveChips(wager + halfOfWager);
+                payout = wager + halfOfWager;
+                log.log(`Player blackjack! Payout: ${payout}`);
             }
             else {
                 // 1:1 payout
-                console.log("player has the higher hand!");
-                dealer.giveChips(potTotal * 2);
+                payout = potTotal * 2;
+                log.log(`Player has the higher hand! Payout: ${payout}`);
             }
+            setWinner(PLAYER_NAME);
         }
         else if (playerHandTotal == dealerHandTotal) {
             if (playerHandTotal == WIN_THRESHOLD) {
-                console.log("push with blackjack!");
                 // payout 3:2
                 let wager = potTotal;
                 let halfOfWager = Math.floor(wager / 2);
-
-                // TODO: check
-                console.log("payout: ", (wager + halfOfWager));
-                dealer.giveChips(wager + halfOfWager);
+                payout = wager + halfOfWager;
+                log.log(`Push with blackjack! Payout: ${payout}`);
             }
             else {
-                console.log("push!");
                 // return player bet
-                dealer.giveChips(potTotal);
+                log.log("Push! Returning player bet...");
+                payout = potTotal;
             }
+            setWinner(NO_WINNER);
         }
+    }
+
+    if (payout > 0) {
+        dealer.giveChips(payout);
     }
     counters.updateTotals();
 }
 
-function togglePlayAgain() {
-    let playAgainPopup = document.getElementById("play-again-popup");
+function setWinner(winner=DEALER_NAME) {
+    let w = document.getElementById("winner");
 
-    if (playAgainPopup.style.display == "flex") {
-        playAgainPopup.style.display = "none";
+    if (winner == DEALER_NAME || winner == PLAYER_NAME) {
+        w.innerText = `${winner} WINS!`;
     }
     else {
-        playAgainPopup.style.display = "flex";
+        w.innerText = "NO WINNER...";
     }
+}
+
+function toggleWinPopup() {
+    if (winPopup.style.display == "grid") {
+        winPopup.style.display = "none";
+    }
+    else {
+        winPopup.style.display = "grid";
+    }
+}
+
+function disablePlayerBetButtons() {
+    chipButtons.setAttribute("inert", "");
+    betButtons.setAttribute("inert", "");
+}
+
+function setPlayerBetPhase() {
+    console.log("setting player bet phase");
+    playerActions.setAttribute("inert", "");
+    if (chipButtons.attributes.getNamedItem("inert")) {
+        chipButtons.removeAttribute("inert");
+    }
+    if (betButtons.attributes.getNamedItem("inert")) {
+        betButtons.removeAttribute("inert");
+    }
+}
+
+function setPlayerActionPhase() {
+    console.log("setting player action phase");
+    disablePlayerBetButtons();
+    if (playerActions.attributes.getNamedItem("inert")) {
+        playerActions.removeAttribute("inert");
+    }
+}
+
+function disableAllPlayerButtons() {
+    console.log("disabling all player buttons");
+    playerActions.setAttribute("inert", "");
+    disablePlayerBetButtons();
 }
 
 function playAgain() {
@@ -1385,6 +1465,7 @@ function playAgain() {
 function cashout() {
     gameStarted = false;
     playerDecidedOnRestart = true;
+    log.log("Cashing out. Thanks for playing!");
     console.log("player cashing out!");
 }
 
@@ -1413,6 +1494,10 @@ let playerTurn = false;
 let dealerTurn = false;
 let gameStarted = true;
 let playerDecidedOnRestart = false;
+let playerActions = document.getElementById("player-actions");
+let chipButtons = document.getElementById("chip-button-wrapper");
+let betButtons = document.getElementById("stacked-button-wrapper");
+let winPopup = document.getElementById("win-popup");
 
 let start = async () => {
     // TODO: include player and dealer totals
@@ -1426,21 +1511,24 @@ let start = async () => {
         playerDecidedOnRestart = false;
         shoe.shuffleShoe(MIN_SHUFFLES);
 
+        log.clearLog();
+        setPlayerBetPhase();
+
         log.log("Waiting for player bet...");
         await waitForAction(() => roundStarted == true);
         // didBet = true;
-        log.log("Starting round.");
+        log.log("Dealing initial hand...");
 
-        // round start
-        // initial deal to player and dealer
+        // round start - initial deal to player and dealer
         for (let i = 0; i < 2; i++) {
             playerTurn = true;
-            setTimeout("player.action(player.hit())", 1000);
+            setTimeout(() => {
+                dealer.dealPlayer(player);
+            }, 1000);
             await waitForAction(() => playerTurn == false);
             updateHand(PLAYER_HAND_ID);
             counters.updateTotals();
 
-            // TODO: deal first card face down
             setTimeout(() => {
                 if (i == 0) {
                     dealer.dealSelf(true);
@@ -1451,10 +1539,16 @@ let start = async () => {
             }, 1000);
             await waitForAction(() => dealerTurn == false);
         }
+        log.log("Initial hand has been dealt. Waiting for player action...");
 
         let pTotal = player.hand.getTotal();
         let splitPTotal = null;
         while (!player.hand.isBust() && !player.folded && !player.hand.isStanding() && pTotal != WIN_THRESHOLD) {
+            /**
+             * always set player action phase in the while loop
+             * to prevent the race condition of user spam clicking
+             */
+            setPlayerActionPhase();
             playerTurn = true;
             await waitForAction(() => playerTurn == false);
             updateHand(PLAYER_HAND_ID);
@@ -1473,7 +1567,11 @@ let start = async () => {
                 document.getElementById("split-pot-wrapper").style.display = "flex";
                 player.useSplitPot();
                 didBet = false;
+
+                setPlayerBetPhase();
                 await waitForAction(() => didBet == true);
+                // setPlayerActionPhase();
+
                 console.log("player did second bet");
                 player.useMainPot();
 
@@ -1500,13 +1598,20 @@ let start = async () => {
             }
         }
 
+        // split hand phase
         if (player.splitHand != null) {
+            // TODO: highlight hand phase
             console.log("doing play on split hand");
             player.useSplitHand();
             player.useSplitPot();
             splitPTotal = player.splitHand.getTotal();
 
             while (!player.splitHand.isBust() && !player.folded && !player.splitHand.isStanding() && splitPTotal != WIN_THRESHOLD) {
+                /**
+                 * always set player action phase in the while loop
+                 * to prevent the race condition of user spam clicking
+                 */
+                setPlayerActionPhase();
                 playerTurn = true;
                 await waitForAction(() => playerTurn == false);
                 updateSplitHand();
@@ -1521,35 +1626,46 @@ let start = async () => {
             player.useMainPot();
         }
 
+        disableAllPlayerButtons();
+        // reveal dealer's flipped card
+        console.log("dealer flip");
+        dealer.hand.get()[0].flip();
+        updateDealerHand();
+
         if (!player.folded) {
             if (pTotal == WIN_THRESHOLD && player.hand.getLength() == 2) {
-                console.log("player hit natural blackjack!");
+                log.log("Player hit natural blackjack!");
             }
             if (splitPTotal != null && splitPTotal == WIN_THRESHOLD && player.splitHand.getLength() == 2) {
-                console.log("player hit natural blackjack on split hand!");
+                log.log("Player hit natural blackjack on split hand!");
             }
 
             let dealerHand = dealer.hand;
-            // reveal dealer's flipped card
-            dealerHand.get()[0].flip();
             let dTotal = dealerHand.getTotal();
-            while (!dealerHand.isBust() && dTotal <= HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
+            while (!dealerHand.isBust() && dTotal < HARD_STAND_THRESHOLD && dTotal != WIN_THRESHOLD) {
                 dealerTurn = true;
                 setTimeout("dealer.dealSelf()", 1000);
                 await waitForAction(() => dealerTurn == false);
                 dTotal = dealerHand.getTotal();
                 dealer.printHandTotal();
+                if (dTotal == HARD_STAND_THRESHOLD) {
+                    log.log(`Dealer stands.`);
+                    break;
+                }
                 // counters.updateTotals();
             }
 
             if (dTotal == WIN_THRESHOLD) {
-                console.log("dealer hit blackjack!");
+                log.log("Dealer hit blackjack!");
             }
 
             player.useMainHand();
             winCheck(dealer, player);
 
             if (player.splitHand != null) {
+                setTimeout(() => {
+
+                }, 1000);
                 player.useSplitHand();
                 player.useSplitPot();
                 winCheck(dealer, player);
@@ -1620,17 +1736,21 @@ let start = async () => {
         log.log("Finished cleanup. Ready to start a new round.");
 
         if (player.total > 0 && !shoe.isEmpty()) {
-            togglePlayAgain();
+            toggleWinPopup();
             await waitForAction(() => playerDecidedOnRestart == true);
             console.log("exited await");
-            togglePlayAgain();
+            toggleWinPopup();
         }
         else {
+            if (player.total == 0) {
+                log.log("Player has no more available chips! Forcing cash out...");
+            }
+            if (shoe.isEmpty()) {
+                log.log("Dealer shoe is empty! Forcing cash out...");
+            }
             cashout();
             // TODO: implement game over screen
         }
-
-        log.clearLog();
     }
 }
 

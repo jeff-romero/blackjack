@@ -67,7 +67,7 @@
                             class="chip"
                             id="chip-500">500</button>
                     </div>
-                    <div class="stacked-button-wrapper">
+                    <div id="stacked-button-wrapper">
                         <button
                             class="action"
                             id="all-in">ALL IN</button>
@@ -101,19 +101,36 @@
                 </div>
             </div>
         </div>
-        <div id="play-again-popup">
-            <p class="popup-header">PLAY AGAIN?</p>
-            <div id="play-again-buttons">
-                <button
-                    class="action"
-                    id="play-again"
-                    onclick="playAgain()"
-                    >YES</button>
-                <button
-                    class="action"
-                    id="cashout"
-                    onclick="cashout()">NO (CASHOUT)</button>
+        <div id="win-popup">
+            <div class="light" id="top-light-1"></div>
+            <div class="light" id="top-light-2"></div>
+            <div class="light" id="top-light-3"></div>
+            <div class="light" id="top-light-4"></div>
+            <div class="light" id="left-light-1"></div>
+            <div class="light" id="left-light-2"></div>
+            <div class="light" id="left-light-3"></div>
+            <div id="win-message">
+                <span id="winner">PLAYER WIN!</span>
+                <span>PLAY AGAIN?</span>
+                <div id="play-again-buttons">
+                    <button
+                        class="action"
+                        id="play-again"
+                        onclick="playAgain()"
+                        >YES</button>
+                    <button
+                        class="action"
+                        id="cashout"
+                        onclick="cashout()">NO (CASHOUT)</button>
+                </div>
             </div>
+            <div class="light" id="right-light-1"></div>
+            <div class="light" id="right-light-2"></div>
+            <div class="light" id="right-light-3"></div>
+            <div class="light" id="bottom-light-1"></div>
+            <div class="light" id="bottom-light-2"></div>
+            <div class="light" id="bottom-light-3"></div>
+            <div class="light" id="bottom-light-4"></div>
         </div>
     </body>
     <script src="blackjack.js"></script>
