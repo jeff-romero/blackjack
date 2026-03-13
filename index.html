@@ -5,48 +5,36 @@
         <title>Blackjack</title>
         <link rel="stylesheet" type="text/css" href="blackjack.css"/>
     </head>
-    <body id="page-wrapper">
+    <body>
         <div id="dealer-space">
-            <div id="settings-wrapper">
-                <button
-                    class="action"
-                    id="reset"
-                    >RESET</button>
-                <div id="shoe-counter-wrapper">
-                    <p class="counter">SHOE:</p>
-                    <p class="counter" id="shoe-counter">0</p>
-                </div>
-            </div>
             <div class="hand-wrapper" id="dealer-hand">
                 <div class="dud-card"></div>
             </div>
-            <div id="log-wrapper">
-                <p id="log-header">
-                    LOG
-                </p>
-                <div id="log"></div>
-            </div>
         </div>
         <div id="player-space">
+            <div></div>
             <div class="player-hands">
                 <div class="hand-wrapper" id="player-hand">
                     <div class="dud-card"></div>
                 </div>
-                <div class="split-hand-wrapper" id="split-hand"></div>
+                <div class="hand-wrapper" id="split-hand"></div>
             </div>
             <div id="counters-controls-wrapper">
                 <div id="counters-wrapper">
                     <div class="counter">
-                        <p class="counter-value" id="player-chips">0</p>
-                        <p class="counter-caption">PLAYER CHIPS</p>
+                        <span class="counter-value" id="player-chips">0</span>
+                        <hr>
+                        <span class="counter-caption">PLAYER CHIPS</span>
                     </div>
                     <div class="counter">
-                        <p class="counter-value" id="pot">0</p>
-                        <p class="counter-caption">POT</p>
+                        <span class="counter-value" id="pot">0</span>
+                        <hr>
+                        <span class="counter-caption">POT</span>
                     </div>
                     <div class="counter" id="split-pot-wrapper">
-                        <p class="counter-value" id="split-pot">0</p>
-                        <p class="counter-caption">SPLIT POT</p>
+                        <span class="counter-value" id="split-pot">0</span>
+                        <hr>
+                        <span class="counter-caption">SPLIT POT</span>
                     </div>
                 </div>
                 <div id="controls">
@@ -100,6 +88,22 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div id="settings-wrapper">
+            <button
+                class="action"
+                id="reset"
+                >RESET</button>
+            <div id="shoe-counter-wrapper">
+                <p class="counter">SHOE:</p>
+                <p class="counter" id="shoe-counter">0</p>
+            </div>
+        </div>
+        <div id="log-wrapper">
+            <p id="log-header">
+                LOG
+            </p>
+            <div id="log"></div>
         </div>
         <div id="win-popup">
             <div class="light" id="top-light-1"></div>
