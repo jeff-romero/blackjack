@@ -25,7 +25,7 @@
     --compliment: hsl(from var(--popupbg) calc(h - 180) s l);
 }
 
-#page-wrapper {
+body {
     position: relative;
     display: flex;
     width: 100dvw;
@@ -34,7 +34,7 @@
     /* background-color: rgb(0, 99, 0); */
     background-image: repeating-linear-gradient(to right, rgb(0, 99, 0) .2%, rgb(8, 92, 8) .4%, rgb(0, 99, 0) .6%);
 }
-#page-wrapper::before {
+body::before {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -47,7 +47,9 @@
 #dealer-space {
     position: relative;
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    flex: 1;
     /* background-color: darkcyan; */
 }
 
@@ -57,10 +59,6 @@
     top: 0;
     left: 0;
     flex-direction: column;
-}
-
-#reset {
-    position: relative;
 }
 
 #shoe-counter-wrapper {
@@ -78,6 +76,8 @@
 .player-hands {
     position: relative;
     display: flex;
+    /* background-color: red; */
+    gap: 4vw;
 }
 
 .hand-wrapper {
@@ -85,15 +85,18 @@
     display: flex;
     /* border: 0.1vw solid black; */
     border-radius: 0.5vw;
-    margin: 1vw;
+    /* background-color: red; */
+    padding: 1vw;
+    /* margin: 1vw; */
     /* scale: 2; */
 }
 
-.split-hand-wrapper {
-    position: relative;
+#player-hand {
+    
+}
+
+#split-hand {
     display: none;
-    /* border: 0.1vw solid black; */
-    margin: 1vw;
 }
 
 #split-pot-wrapper {
@@ -102,6 +105,7 @@
 
 #dealer-hand {
     position: relative;
+    align-self: center;
 }
 
 #player-space {
@@ -109,11 +113,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    gap: 1vw;
     /* background-color: blue; */
-}
-
-.player-hand {
-    position: relative;
 }
 
 img {
@@ -126,6 +129,20 @@ img {
     display: flex;
     width: 8vw;
     height: auto;
+}
+
+@media screen and (min-device-width: 64px) {
+    .card {
+        width: 15vw;
+        height: auto;
+    }
+}
+
+@media screen and (min-device-width: 641px) {
+    .card {
+        width: 8vw;
+        height: auto;
+    }
 }
 
 .dud-card {
@@ -174,35 +191,38 @@ img {
     position: relative;
     display: flex;
     background-color: rgba(0, 0, 0, 0.6);
-    padding-block: 0.5vw;
-    width: 25%;
-    justify-content: space-evenly;
-    /* gap: 3vw; */
+    padding: 1vw;
+    justify-content: space-between;
+    gap: 1vw;
 }
 
 .counter {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    align-items: center;
+    align-content: center;
     color: white;
+    /* gap: 0.1vw; */
     /* width: 95%; */
     /* border: 0.1vw solid white; */
     /* background-color: red; */
+    text-align: center;
 }
 
-p.counter-value {
+span.counter-value {
     display: flex;
-    border: 0.1vw solid white;
+    /* border: 0.1vw solid white; */
     /* padding: 0.5vw; */
-    width: 100%;
+    /* width: 100%; */
     /* vertical-align: middle; */
     justify-content: center;
 }
 
-p.counter-caption {
-    display: flex;
-    text-align: center;
+hr {
+    color: white;
+}
+
+span.counter-caption {
     /* border: 0.1vw solid red; */
 }
 
@@ -247,6 +267,7 @@ button.chip {
     color: white;
     border-width: 0.35vw;
     border-color: white;
+    transition: transform 0.5s;
 }
 
 @property --angle {
@@ -254,21 +275,6 @@ button.chip {
     initial-value: 0deg;
     inherits: false;
 }
-
-/* .dud-card::after, .dud-card::before {
-    --angle: 0deg;
-    position: absolute;
-    content: "";
-    width: 100%;
-    height: 100%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: -1;
-    padding: 6vw;
-    background-image: conic-gradient(from var(--angle), blue .09turn,red .09turn);
-    animation: spin 3s linear infinite;
-} */
 
 button.chip::after, button.chip::before {
     --angle: 0deg;
@@ -357,6 +363,12 @@ button.action {
     color: black;
 }
 
+#reset {
+    position: relative;
+    width: 10vw;
+    height: 10vw;
+}
+
 #player-actions {
     position: relative;
     display: flex;
@@ -439,15 +451,18 @@ button.action {
 
 #log-wrapper {
     position: absolute;
-    top: 0;
+    top: 50%;
     right: 0;
-    width: 13vw;
-    height: 15vw;
+    transform: translate(0%, -50%);
+    width: 20%;
+    height: 30%;
+    max-height: 30%;
     display: flex;
     flex-direction: column;
     border: 0.3vw solid black;
     background-color: rgba(37, 37, 37, 0.8);
     color: white;
+    z-index: 1;
 }
 
 #log-header {
@@ -473,14 +488,15 @@ button.action {
     text-overflow: ellipsis;
     /* background-color: rgb(0, 0, 0, 0.8); */
     content-visibility: auto;
+    width: 100%;
 }
 
 .message-time {
-    font-size: 0.725rem;
+    font-size: 0.725em;
 }
 
 .message-content {
-    font-size: 0.85rem;
+    font-size: 0.85em;
     overflow-wrap: normal;
 }
 
