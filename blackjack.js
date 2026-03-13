@@ -36,7 +36,6 @@ class Pot {
         this.__total = value;
     }
 
-    // TODO: move out of class
     chipValueInBounds(value=0) {
         if (value <= 0 || value > MAX_CHIP_VAL) {
             console.log("chip value is out of bounds!");
@@ -390,14 +389,13 @@ class Hand {
 
 
 class Player {
-    /*
-    player:
-        hit - take another card
-        stand/stay - take no more cards
-        double down - increase initial bet by 100% and take one more card. the additional bet is placed next to the original bet.
-        split - create two hands from a starting hand where both cards have the same value. each new hand gets a second card resulting in two starting hands. this requires an additional bet on the second hand. the two hands are played out independently, and the wager on each hand is won or lost independently.
-        surrender - forfeit half the bet and end the hand immediately. not allowed after splitting.
-    */
+    /**
+     * hit - take another card
+     * stand/stay - take no more cards
+     * double down - increase initial bet by 100% and take one more card. the additional bet is placed next to the original bet.
+     * split - create two hands from a starting hand where both cards have the same value. each new hand gets a second card resulting in two starting hands. this requires an additional bet on the second hand. the two hands are played out independently, and the wager on each hand is won or lost independently.
+     * surrender - forfeit half the bet and end the hand immediately. not allowed after splitting.
+     */
     constructor() {
         this.__pot = new Pot();
         this.__splitPot = null;
@@ -408,7 +406,8 @@ class Player {
         this.__currentHand = this.__hand;
 
         this.__total = STARTING_CHIPS;
-        // TODO: move to updateCounters
+
+        // initialize front-end value from here for security
         this.__chips = document.getElementById("player-chips");
         this.__chips.innerText = this.__total;
         this.__folded = false;
@@ -438,7 +437,6 @@ class Player {
         return this.__currentHand;
     }
 
-    // TODO: remove
     get total() {
         return this.__total;
     }
@@ -475,7 +473,6 @@ class Player {
         this.__currentHand = value;
     }
 
-    // TODO: remove
     set total(value) {
         this.__total = value;
     }
@@ -502,19 +499,6 @@ class Player {
 
     useSplitHand() {
         this.__currentHand = this.__splitHand;
-    }
-
-    // TODO: remove
-    getHandArr() {
-        return this.__hand.get();
-    }
-
-    getSplitHandArr() {
-        return this.__splitHand.get() ? this.__splitHand : null;
-    }
-
-    getCurrentHandArr() {
-        return this.__currentHand.get() ? this.__currentHand : null;
     }
 
     printHandTotal() {
@@ -735,8 +719,6 @@ class Player {
     }
 
     cleanup() {
-        // TODO: move more cleanup into this function
-
         this.__splitHand = null;
         this.__splitPot = null;
     }
@@ -1045,9 +1027,7 @@ class Counters {
         this.updateTotals();
     }
 
-    updateDealerTotals() {
-        // TODO: implement dealer total counter
-    }
+    updateDealerTotals() {}
 
     updatePlayerTotals() {
         this.__playerChipCounter.innerText = this.__player.total;
@@ -1235,7 +1215,6 @@ function fanHand(handWrapper) {
 }
 
 function createVisualCard(card) {
-    // TODO: remove wrapper, just use img
     let cardWrapper = document.createElement("div");
     cardWrapper.className = "card";
 
@@ -1286,7 +1265,6 @@ function updateHand(handId=PLAYER_HAND_ID) {
 }
 
 function updateSplitHand() {
-    // TODO: put into splitHand()
     // uses different hand element, so must use a separate function instead of context switching
     let splitHandWrapper = document.getElementById(SPLIT_HAND_ID);
 
@@ -1456,6 +1434,22 @@ function disableAllPlayerButtons() {
     disablePlayerBetButtons();
 }
 
+function enableAllPlayerButtons() {
+    if (playerActions.attributes.getNamedItem("inert")) {
+        playerActions.removeAttribute("inert");
+    }
+    if (chipButtons.attributes.getNamedItem("inert")) {
+        chipButtons.removeAttribute("inert");
+    }
+    if (betButtons.attributes.getNamedItem("inert")) {
+        betButtons.removeAttribute("inert");
+    }
+}
+
+function setCurrentHandContext() {
+
+}
+
 function playAgain() {
     gameStarted = true;
     playerDecidedOnRestart = true;
@@ -1500,9 +1494,6 @@ let betButtons = document.getElementById("stacked-button-wrapper");
 let winPopup = document.getElementById("win-popup");
 
 let start = async () => {
-    // TODO: include player and dealer totals
-    // TODO: add set player turn function
-
     while (gameStarted) {
         roundStarted = false;
         didBet = false;
@@ -1539,15 +1530,22 @@ let start = async () => {
             }, 1000);
             await waitForAction(() => dealerTurn == false);
         }
-        log.log("Initial hand has been dealt. Waiting for player action...");
+        log.log("Initial hand has been dealt.");
 
         let pTotal = player.hand.getTotal();
         let splitPTotal = null;
         while (!player.hand.isBust() && !player.folded && !player.hand.isStanding() && pTotal != WIN_THRESHOLD) {
+            if (player.splitHand != null) {
+                log.log("Waiting for player action on main hand...");
+            }
+            else {
+                log.log("Waiting for player action...");
+            }
             /**
              * always set player action phase in the while loop
              * to prevent the race condition of user spam clicking
              */
+            
             setPlayerActionPhase();
             playerTurn = true;
             await waitForAction(() => playerTurn == false);
@@ -1563,12 +1561,12 @@ let start = async () => {
             if (player.hand.getLength() == 1) {
                 console.log("setting up 2 new starting hands");
 
-                // TODO: implement visual notification for second bet
                 document.getElementById("split-pot-wrapper").style.display = "flex";
                 player.useSplitPot();
                 didBet = false;
 
                 setPlayerBetPhase();
+                log.log("Waiting for player bet on split hand...");
                 await waitForAction(() => didBet == true);
                 // setPlayerActionPhase();
 
@@ -1600,13 +1598,13 @@ let start = async () => {
 
         // split hand phase
         if (player.splitHand != null) {
-            // TODO: highlight hand phase
             console.log("doing play on split hand");
             player.useSplitHand();
             player.useSplitPot();
             splitPTotal = player.splitHand.getTotal();
 
             while (!player.splitHand.isBust() && !player.folded && !player.splitHand.isStanding() && splitPTotal != WIN_THRESHOLD) {
+                log.log("Waiting for player action on split hand...");
                 /**
                  * always set player action phase in the while loop
                  * to prevent the race condition of user spam clicking
@@ -1646,6 +1644,7 @@ let start = async () => {
                 dealerTurn = true;
                 setTimeout("dealer.dealSelf()", 1000);
                 await waitForAction(() => dealerTurn == false);
+                log.log("Dealer hits.");
                 dTotal = dealerHand.getTotal();
                 dealer.printHandTotal();
                 if (dTotal == HARD_STAND_THRESHOLD) {
@@ -1692,13 +1691,11 @@ let start = async () => {
             dealerHand.clearHand();
             dealerHand.unstand();
 
-            // TODO: clear split hand
             playerHand.clearHand();
             playerHand.unstand();
             if (playerSplitHand != null) {
                 playerSplitHand.clearHand();
                 playerSplitHand.unstand();
-                // TODO: put more in the cleanup
                 player.cleanup();
                 document.getElementById("split-pot-wrapper").style.display = "none";
             }
@@ -1749,7 +1746,7 @@ let start = async () => {
                 log.log("Dealer shoe is empty! Forcing cash out...");
             }
             cashout();
-            // TODO: implement game over screen
+            log.log("GAME OVER!");
         }
     }
 }
