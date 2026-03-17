@@ -31,8 +31,9 @@ body {
     width: 100dvw;
     height: 100dvh;
     flex-direction: column;
-    /* background-color: rgb(0, 99, 0); */
+    /* background-color: var(--urban-steel); */
     background-image: repeating-linear-gradient(to right, rgb(0, 99, 0) .2%, rgb(8, 92, 8) .4%, rgb(0, 99, 0) .6%);
+    background-size: contain;
 }
 body::before {
     position: absolute;
@@ -237,7 +238,7 @@ span.counter-caption {
     /* padding-inline: 1vw; */
 }
 
-#chip-button-wrapper {
+#chips-wrapper {
     position: relative;
     /* flex: 1; */
     display: flex;

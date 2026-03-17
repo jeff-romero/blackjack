@@ -4,6 +4,7 @@
         <meta charset="UTF-8"/>
         <title>Blackjack</title>
         <link rel="stylesheet" type="text/css" href="blackjack.css"/>
+        <link rel="icon" type="image/x-icon" href="assets/images/spades/ace-of-spades.png">
     </head>
     <body>
         <div id="dealer-space">
@@ -38,23 +39,7 @@
                     </div>
                 </div>
                 <div id="controls">
-                    <div id="chip-button-wrapper">
-                        <button
-                            class="chip"
-                            id="chip-1">1</button>
-                        <button
-                            class="chip"
-                            id="chip-5">5</button>
-                        <button
-                            class="chip"
-                            id="chip-25">25</button>
-                        <button
-                            class="chip"
-                            id="chip-100">100</button>
-                        <button
-                            class="chip"
-                            id="chip-500">500</button>
-                    </div>
+                    <div id="chips-wrapper"></div>
                     <div id="stacked-button-wrapper">
                         <button
                             class="action"
@@ -90,10 +75,6 @@
             </div>
         </div>
         <div id="settings-wrapper">
-            <button
-                class="action"
-                id="reset"
-                >RESET</button>
             <div id="shoe-counter-wrapper">
                 <p class="counter">SHOE:</p>
                 <p class="counter" id="shoe-counter">0</p>

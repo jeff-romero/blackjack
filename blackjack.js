@@ -36,21 +36,12 @@ class Pot {
         this.__total = value;
     }
 
-    chipValueInBounds(value=0) {
-        if (value <= 0 || value > MAX_CHIP_VAL) {
-            console.log("chip value is out of bounds!");
-            return false;
-        }
-
-        return true;
-    }
-
     add(value=0) {
-        if (!this.chipValueInBounds(value)) {
+        if (!Chip.chipValueInBounds(value)) {
             return false;
         }
         else if ((this.__total + value) > MAX_CHIPS) {
-            console.log(`pot cannot hold more chips! (max: ${MAX_CHIPS})`);
+            log.log(`Pot cannot hold more chips! (max: ${MAX_CHIPS})`);
             return false;
         }
 
@@ -60,7 +51,7 @@ class Pot {
     }
 
     subtract(value=0) {
-        if (!this.chipValueInBounds(value)) {
+        if (!Chip.chipValueInBounds(value)) {
             return false;
         }
         else if ((this.__total - value) < 0) {
@@ -75,38 +66,39 @@ class Pot {
 }
 
 
-// used to get the className
-const RANK_MAP = {
-    "2": "two",
-    "3": "three",
-    "4": "four",
-    "5": "five",
-    "6": "six",
-    "7": "seven",
-    "8": "eight",
-    "9": "nine",
-    "10": "ten",
-    "ace": "ace",
-    "jack": "jack",
-    "queen": "queen",
-    "king": "king"
-};
-const VALUE_MAP = {
-    "2": 2,
-    "3": 3,
-    "4": 4,
-    "5": 5,
-    "6": 6,
-    "7": 7,
-    "8": 8,
-    "9": 9,
-    "10": 10,
-    "ace": ACE_LOW,
-    "jack": 10,
-    "queen": 10,
-    "king": 10
-};
 class Card {
+    // used to get the className
+    static RANK_MAP = {
+        "2": "two",
+        "3": "three",
+        "4": "four",
+        "5": "five",
+        "6": "six",
+        "7": "seven",
+        "8": "eight",
+        "9": "nine",
+        "10": "ten",
+        "ace": "ace",
+        "jack": "jack",
+        "queen": "queen",
+        "king": "king"
+    };
+    static VALUE_MAP = {
+        "2": 2,
+        "3": 3,
+        "4": 4,
+        "5": 5,
+        "6": 6,
+        "7": 7,
+        "8": 8,
+        "9": 9,
+        "10": 10,
+        "ace": ACE_LOW,
+        "jack": 10,
+        "queen": 10,
+        "king": 10
+    };
+
     constructor(suit, rank, flipped=false) {
         this.__suit = suit;
         this.__rank = rank;
@@ -122,7 +114,7 @@ class Card {
     }
 
     get value() {
-        return VALUE_MAP[this.__rank];
+        return Card.VALUE_MAP[this.__rank];
     }
 
     get flipped() {
@@ -505,17 +497,8 @@ class Player {
         console.log(`player hand total: ${this.__currentHand.getTotal()}`);
     }
 
-    chipValueInBounds(value=0) {
-        if (value <= 0 || value > MAX_CHIP_VAL) {
-            console.log("chip value is out of bounds!");
-            return false;
-        }
-
-        return true;
-    }
-
     addChips(value=0) {
-        if (!this.chipValueInBounds(value)) {
+        if (!Chip.chipValueInBounds(value)) {
             return false;
         }
         else if ((this.__total + value) > MAX_CHIPS) {
@@ -529,7 +512,7 @@ class Player {
     }
 
     subtractChips(value=0) {
-        if (!this.chipValueInBounds(value)) {
+        if (!Chip.chipValueInBounds(value)) {
             return false;
         }
         else if ((this.__total - value) < 0) {
@@ -789,203 +772,273 @@ class Dealer {
 
 
 class Chip {
-    constructor(element) {
-        const CHIP_COLORS = {
-            "1": {
-                "mouseover": "lightgrey",
-                "mouseleave": "white",
-                "mousedown": "darkgrey",
-                "mouseup": "lightgrey",
-                "touchstart": "darkgrey",
-                "touchend": "white"
-            },
-            "5": {
-                "mouseover": "#8b1e22",
-                "mouseleave": "#c12e34",
-                "mousedown": "#69171a",
-                "mouseup": "#8b1e22",
-                "touchstart": "#69171a",
-                "touchend": "#c12e34"
-            },
-            "25": {
-                "mouseover": "#287e39",
-                "mouseleave": "#319845",
-                "mousedown": "#1f5f2b",
-                "mouseup": "#287e39",
-                "touchstart": "#1f5f2b",
-                "touchend": "#319845"
-            },
-            "100": {
-                "mouseover": "#2b4472",
-                "mouseleave": "#3b5b98",
-                "mousedown": "#22365a",
-                "mouseup": "#2b4472",
-                "touchstart": "#22365a",
-                "touchend": "#3b5b98"
-            },
-            "500": {
-                "mouseover": "#202020",
-                "mouseleave": "#303030",
-                "mousedown": "#000000",
-                "mouseup": "#202020",
-                "touchstart": "#000000",
-                "touchend": "#303030"
-            }
-        };
-        const CHIP_VALUES = {
-            "1": 1,
-            "5": 5,
-            "25": 25,
-            "100": 100,
-            "500": 500
-        };
+    constructor(id, value=0) {
+        this.__value = value;
+        this.__chip = document.createElement("button");
+        this.__chip.className = "chip";
+        this.__chip.id = id;
+        this.__chip.innerText = this.__value;
+    }
 
-        // let chip1 = document.getElementById("chip-1");
-        // let chip5 = document.getElementById("chip-5");
-        // let chip25 = document.getElementById("chip-25");
-        // let chip100 = document.getElementById("chip-100");
-        // let chip500 = document.getElementById("chip-500");
+    static chipValueInBounds(value=0) {
+        if (value <= 0 || value > MAX_CHIP_VAL) {
+            console.log("chip value is out of bounds!");
+            return false;
+        }
 
-        // let chipButtons = [
-        //     chip1,
-        //     chip5,
-        //     chip25,
-        //     chip100,
-        //     chip500
-        // ];
+        return true;
+    }
 
-        let chip = element;
-        let chipText = "" + chip.innerText;
-        let value = CHIP_VALUES[chipText];
+    get chip() {
+        return this.__chip;
+    }
 
-        chip.addEventListener("mouseover", (e) => {
-            e.target.style.backgroundColor = "" + CHIP_COLORS[chipText]["mouseover"];
-        });
-        chip.addEventListener("mouseleave", (e) => {
-            e.target.style.backgroundColor = CHIP_COLORS[chipText]["mouseleave"];
-        });
-        chip.addEventListener("mousedown", (e) => {
-            e.target.style.backgroundColor = CHIP_COLORS[chipText]["mousedown"];
-        });
-        chip.addEventListener("mouseup", (e) => {
-            e.target.style.backgroundColor = CHIP_COLORS[chipText]["mouseup"];
-        });
+    get element() {
+        return this.__chip;
+    }
 
-        chip.addEventListener("click", (e) => {
-            /**
-             * !roundStarted && didBet
-             * means cleanup has occurred, so player can't intervene
-             */
-            if ((roundStarted && didBet) || (!roundStarted && didBet) || !dealer.takeChips(value, player.currentPot)) {
-                console.log("couldn't take player chips");
-                return;
-            }
+    get value() {
+        return this.__value;
+    }
 
-            counters.updateTotals();
-        });
+    disableAnimation() {
+        this.__chip.style.animationPlayState = "paused";
+    }
 
-        this.getChipElement = function() {
-            return chip;
-        };
-
-        this.getChip = function() {
-            return this;
-        };
-
-        this.getValue = function() {
-            return value;
-        };
-
-        this.toggleAnimation = function() {
-            if (getComputedStyle(chip).animationPlayState == "running") {
-                chip.style.animationPlayState = "paused";
-            }
-            else {
-                chip.style.animationPlayState = "running";
-            }
-        };
+    enableAnimation() {
+        this.__chip.style.animationPlayState = "running";
     }
 }
 
 
-class PlayerButtons {
+/**
+ * based off of the values contained in Chips.CHIP_VALUES, this class
+ * will create Chip objects, then create front-end chip elements,
+ * and add those front-end chip elements to the DOM.
+ */
+class Chips {
+    static CHIP_BUTTON_WRAPPER = document.getElementById("chips-wrapper");
+
+    static CHIP_VALUES = [
+        1,
+        5,
+        25,
+        100,
+        500
+    ];
+
+    static CHIP_COLORS = {
+        1: {
+            "mouseover": "lightgrey",
+            "mouseleave": "white",
+            "mousedown": "darkgrey",
+            "mouseup": "lightgrey",
+            "touchstart": "darkgrey",
+            "touchend": "white"
+        },
+        5: {
+            "mouseover": "#8b1e22",
+            "mouseleave": "#c12e34",
+            "mousedown": "#69171a",
+            "mouseup": "#8b1e22",
+            "touchstart": "#69171a",
+            "touchend": "#c12e34"
+        },
+        25: {
+            "mouseover": "#287e39",
+            "mouseleave": "#319845",
+            "mousedown": "#1f5f2b",
+            "mouseup": "#287e39",
+            "touchstart": "#1f5f2b",
+            "touchend": "#319845"
+        },
+        100: {
+            "mouseover": "#2b4472",
+            "mouseleave": "#3b5b98",
+            "mousedown": "#22365a",
+            "mouseup": "#2b4472",
+            "touchstart": "#22365a",
+            "touchend": "#3b5b98"
+        },
+        500: {
+            "mouseover": "#202020",
+            "mouseleave": "#303030",
+            "mousedown": "#000000",
+            "mouseup": "#202020",
+            "touchstart": "#000000",
+            "touchend": "#303030"
+        }
+    };
+
+    static CHIP_ID_PREFIX = "chip";
+    static CHIP_ID_DELIMITER = "-";
+
     constructor() {
-        const ACTION_BTN_COLORS = {
-            "mouseover": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
-            "mouseleave": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))",
-            "mousedown": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
-            "mouseup": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
-            "touchstart": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
-            "touchend": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))"
-        };
+        // will contain chip ids (e.g. ["chip-1", "chip-100"])
+        this.__chipIds = [];
+        // will contain Chip objects (e.g. [Chip(), Chip()])
+        this.__chips = [];
 
-        let chip1 = new Chip(document.getElementById("chip-1"));
-        let chip5 = new Chip(document.getElementById("chip-5"));
-        let chip25 = new Chip(document.getElementById("chip-25"));
-        let chip100 = new Chip(document.getElementById("chip-100"));
-        let chip500 = new Chip(document.getElementById("chip-500"));
+        // create Chip objects
+        for (let i = 0; i < Chips.CHIP_VALUES.length; i++) {
+            let newChipValue = Chips.CHIP_VALUES[i];
+            let newChipId = Chips.CHIP_ID_PREFIX + Chips.CHIP_ID_DELIMITER + newChipValue;
+            this.__chipIds.push(newChipId);
 
-        let hit = document.getElementById("hit");
-        let stand = document.getElementById("stand");
-        let doubleDown = document.getElementById("double-down");
-        let split = document.getElementById("split");
-        let fold = document.getElementById("fold");
-        let allIn = document.getElementById("all-in");
-        let deal = document.getElementById("deal");
-        let reset = document.getElementById("reset");
-        let playAgain = document.getElementById("play-again");
-        let cashout = document.getElementById("cashout");
+            let newChip = new Chip(newChipId, newChipValue);
+            this.__chips.push(newChip);
+        }
 
-        let chipButtons = [
-            chip1,
-            chip5,
-            chip25,
-            chip100,
-            chip500
+        // add hover and click functionality to Chip objects
+        for (let i = 0; i < this.__chips.length; i++) {
+            let currentChip = this.__chips[i];
+
+            currentChip.element.addEventListener("mouseover", (e) => {
+                e.target.style.backgroundColor = Chips.CHIP_COLORS[currentChip.value]["mouseover"];
+            });
+            currentChip.element.addEventListener("mouseleave", (e) => {
+                e.target.style.backgroundColor = Chips.CHIP_COLORS[currentChip.value]["mouseleave"];
+            });
+            currentChip.element.addEventListener("mousedown", (e) => {
+                e.target.style.backgroundColor = Chips.CHIP_COLORS[currentChip.value]["mousedown"];
+            });
+            currentChip.element.addEventListener("mouseup", (e) => {
+                e.target.style.backgroundColor = Chips.CHIP_COLORS[currentChip.value]["mouseup"];
+            });
+
+            currentChip.element.addEventListener("click", (e) => {
+                if (roundStarted && didBet) {
+                    log.log("Round has already started! Cannot add more chips to the pot!");
+                    return;
+                }
+                else if (!roundStarted && didBet) {
+                    log.log("Board cleanup in progress! Cannot add more chips to the pot!");
+                    return;
+                }
+                else if (!dealer.takeChips(currentChip.value, player.currentPot)) {
+                    console.log("couldn't take player chips");
+                    return;
+                }
+
+                counters.updateTotals();
+            });
+        }
+
+        while (Chips.CHIP_BUTTON_WRAPPER.firstChild) {
+            Chips.CHIP_BUTTON_WRAPPER.removeChild(Chips.CHIP_BUTTON_WRAPPER.firstChild);
+        }
+
+        for (let i = 0; i < this.__chips.length; i++) {
+            Chips.CHIP_BUTTON_WRAPPER.appendChild(this.__chips[i].element);
+        }
+    }
+
+    get chip_ids() {
+        return this.__chipIds;
+    }
+
+    get chips() {
+        return this.__chips;
+    }
+
+    disable() {
+        Chips.CHIP_BUTTON_WRAPPER.setAttribute("inert", "");
+
+        for (let i = 0; i < this.__chips.length; i++) {
+            this.__chips[i].disableAnimation();
+        }
+    }
+
+    enable() {
+        if (Chips.CHIP_BUTTON_WRAPPER.attributes.getNamedItem("inert")) {
+            Chips.CHIP_BUTTON_WRAPPER.removeAttribute("inert");
+
+            for (let i = 0; i < this.__chips.length; i++) {
+                this.__chips[i].enableAnimation();
+            }
+        }
+    }
+}
+
+
+class ActionButtons {
+    static PLAYER_ACTION_BUTTONS = document.getElementById("player-actions");
+
+    static PLAYER_BET_BUTTONS = document.getElementById("stacked-button-wrapper");
+
+    static ACTION_BTN_COLORS = {
+        "mouseover": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
+        "mouseleave": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))",
+        "mousedown": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
+        "mouseup": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
+        "touchstart": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
+        "touchend": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))"
+    };
+
+    constructor() {
+        /**
+         * unlike Chips, which all share the same agnostic function, but
+         * are separated based off of its argument (numeric value), each action 
+         * button will have a unique function.
+         */
+        this.__hit = document.getElementById("hit");
+        this.__stand = document.getElementById("stand");
+        this.__doubleDown = document.getElementById("double-down");
+        this.__split = document.getElementById("split");
+        this.__fold = document.getElementById("fold");
+        this.__allIn = document.getElementById("all-in");
+        this.__deal = document.getElementById("deal");
+        // this.__reset = document.getElementById("reset");
+        this.__playAgain = document.getElementById("play-again");
+        this.__cashout = document.getElementById("cashout");
+
+        this.__actions = [
+            this.__hit,
+            this.__stand,
+            this.__doubleDown,
+            this.__split,
+            this.__fold,
+            this.__allIn,
+            this.__deal,
+            // this.__reset,
+            this.__playAgain,
+            this.__cashout
         ];
 
-        let actionButtons = [
-            hit,
-            stand,
-            doubleDown,
-            split,
-            fold,
-            allIn,
-            deal,
-            reset,
-            playAgain,
-            cashout
-        ];
+        for (let i = 0; i < this.__actions.length; i++) {
+            let currentButton = this.__actions[i];
 
-        for (let i = 0; i < actionButtons.length; i++) {
-            let btn = actionButtons[i];
-
-            btn.addEventListener("mouseover", (e) => {
-                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mouseover"];
+            currentButton.addEventListener("mouseover", (e) => {
+                (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["mouseover"];
             });
-            btn.addEventListener("mouseleave", (e) => {
-                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mouseleave"];
+            currentButton.addEventListener("mouseleave", (e) => {
+                (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["mouseleave"];
             });
-            btn.addEventListener("mousedown", (e) => {
-                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mousedown"];
+            currentButton.addEventListener("mousedown", (e) => {
+                (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["mousedown"];
             });
-            btn.addEventListener("mouseup", (e) => {
-                (e.target).style.backgroundImage = ACTION_BTN_COLORS["mouseup"];
+            currentButton.addEventListener("mouseup", (e) => {
+                (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["mouseup"];
             });
-            btn.addEventListener("touchstart", (e) => {
-                (e.target).style.backgroundImage = ACTION_BTN_COLORS["touchstart"];
+            currentButton.addEventListener("touchstart", (e) => {
+                (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["touchstart"];
             });
-            btn.addEventListener("touchend", (e) => {
-                (e.target).style.backgroundImage = ACTION_BTN_COLORS["touchend"];
+            currentButton.addEventListener("touchend", (e) => {
+                (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["touchend"];
             })
         }
 
-        allIn.addEventListener("click", () => {
-            /**
-             * !roundStarted && didBet
-             * means cleanup has occurred, so player can't intervene
-             */
-            if ((roundStarted && didBet) || (!roundStarted && didBet) || !dealer.takeChips(player.total, player.currentPot)) {
+        this.__allIn.addEventListener("click", () => {
+            if (roundStarted && didBet) {
+                log.log("Round has already started! Cannot add more chips to the pot!");
+                return;
+            }
+            else if (!roundStarted && didBet) {
+                log.log("Board cleanup in progress! Cannot add more chips to the pot!");
+                return;
+            }
+            else if (!dealer.takeChips(player.total, player.currentPot)) {
+                console.log("couldn't take player chips");
                 return;
             }
 
@@ -993,12 +1046,56 @@ class PlayerButtons {
             counters.updateTotals();
             player.deal();
         });
+    }
 
-        this.printChipButtons = function() {
-            for (let i = 0; i < chipButtons.length; i++) {
-                chipButtons[i].toggleAnimation();
-            }
-        };
+    get actions() {
+        return this.__actions;
+    }
+
+    disable() {
+        ActionButtons.PLAYER_BET_BUTTONS.setAttribute("inert", "");
+        ActionButtons.PLAYER_ACTION_BUTTONS.setAttribute("inert", "");
+    }
+
+    enable() {
+        if (ActionButtons.PLAYER_BET_BUTTONS.attributes.getNamedItem("inert")) {
+            ActionButtons.PLAYER_BET_BUTTONS.removeAttribute("inert");
+        }
+        if (ActionButtons.PLAYER_ACTION_BUTTONS.attributes.getNamedItem("inert")) {
+            ActionButtons.PLAYER_ACTION_BUTTONS.removeAttribute("inert");
+        }
+    }
+}
+
+
+class PlayerButtons {
+    constructor() {
+        this.__chips = new Chips();
+        this.__actions = new ActionButtons();
+    }
+
+    get chips() {
+        return this.__chips.chips;
+    }
+
+    get actions() {
+        return this.__actions.actions;
+    }
+
+    disableChipButtons() {
+        this.__chips.disable();
+    }
+
+    enableChipButtons() {
+        this.__chips.enable();
+    }
+
+    disableAllButtons() {
+
+    }
+
+    enableAllButtons() {
+
     }
 }
 
@@ -1489,9 +1586,10 @@ let dealerTurn = false;
 let gameStarted = true;
 let playerDecidedOnRestart = false;
 let playerActions = document.getElementById("player-actions");
-let chipButtons = document.getElementById("chip-button-wrapper");
+let chipButtons = document.getElementById("chips-wrapper");
 let betButtons = document.getElementById("stacked-button-wrapper");
 let winPopup = document.getElementById("win-popup");
+
 
 let start = async () => {
     while (gameStarted) {
@@ -1510,7 +1608,10 @@ let start = async () => {
         // didBet = true;
         log.log("Dealing initial hand...");
 
-        // round start - initial deal to player and dealer
+        /**
+         * ROUND START
+         * - initial deal to the player and dealer
+         */
         for (let i = 0; i < 2; i++) {
             playerTurn = true;
             setTimeout(() => {
@@ -1532,6 +1633,10 @@ let start = async () => {
         }
         log.log("Initial hand has been dealt.");
 
+        /**
+         * PLAYER TURN
+         * MAIN HAND PHASE
+         */
         let pTotal = player.hand.getTotal();
         let splitPTotal = null;
         while (!player.hand.isBust() && !player.folded && !player.hand.isStanding() && pTotal != WIN_THRESHOLD) {
@@ -1596,7 +1701,10 @@ let start = async () => {
             }
         }
 
-        // split hand phase
+        /**
+         * PLAYER TURN
+         * SPLIT HAND PHASE
+         */
         if (player.splitHand != null) {
             console.log("doing play on split hand");
             player.useSplitHand();
@@ -1630,6 +1738,9 @@ let start = async () => {
         dealer.hand.get()[0].flip();
         updateDealerHand();
 
+        /**
+         * DEALER TURN
+         */
         if (!player.folded) {
             if (pTotal == WIN_THRESHOLD && player.hand.getLength() == 2) {
                 log.log("Player hit natural blackjack!");
@@ -1673,8 +1784,10 @@ let start = async () => {
             }
         }
 
+        /**
+         * BOARD CLEANUP
+         */
         roundStarted = false;
-
         let finishCleanup = false;
         log.log("Beginning board cleanup...");
         // discard cards
@@ -1732,7 +1845,7 @@ let start = async () => {
 
         log.log("Finished cleanup. Ready to start a new round.");
 
-        if (player.total > 0 && !shoe.isEmpty()) {
+        if (player.total > 0 && !shoe.isEmpty() && shoe.getLength() >= 4) {
             toggleWinPopup();
             await waitForAction(() => playerDecidedOnRestart == true);
             console.log("exited await");
