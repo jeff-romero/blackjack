@@ -961,20 +961,11 @@ class Chips {
 }
 
 
-class ActionButton {
-    constructor(id) {
-        this.__actionButon = document.createElement("button");
-        this.__actionButton.className = "action";
-        this.__actionButton.id = id;
-    }
-
-    get actionButton() {
-        return this.__actionButon;
-    }
-}
-
-
 class ActionButtons {
+    static PLAYER_ACTION_BUTTONS = document.getElementById("player-actions");
+
+    static PLAYER_BET_BUTTONS = document.getElementById("stacked-button-wrapper");
+
     static ACTION_BTN_COLORS = {
         "mouseover": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
         "mouseleave": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))",
@@ -997,11 +988,11 @@ class ActionButtons {
         this.__fold = document.getElementById("fold");
         this.__allIn = document.getElementById("all-in");
         this.__deal = document.getElementById("deal");
-        this.__reset = document.getElementById("reset");
+        // this.__reset = document.getElementById("reset");
         this.__playAgain = document.getElementById("play-again");
         this.__cashout = document.getElementById("cashout");
 
-        this.__actionButtons = [
+        this.__actions = [
             this.__hit,
             this.__stand,
             this.__doubleDown,
@@ -1009,13 +1000,13 @@ class ActionButtons {
             this.__fold,
             this.__allIn,
             this.__deal,
-            this.__reset,
+            // this.__reset,
             this.__playAgain,
             this.__cashout
         ];
 
-        for (let i = 0; i < this.__actionButtons.length; i++) {
-            let currentButton = this.__actionButtons[i];
+        for (let i = 0; i < this.__actions.length; i++) {
+            let currentButton = this.__actions[i];
 
             currentButton.addEventListener("mouseover", (e) => {
                 (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["mouseover"];
@@ -1034,74 +1025,6 @@ class ActionButtons {
             });
             currentButton.addEventListener("touchend", (e) => {
                 (e.target).style.backgroundImage = ActionButtons.ACTION_BTN_COLORS["touchend"];
-            })
-        }
-    }
-
-    get actionButtons() {
-        return this.__actionButtons;
-    }
-}
-
-
-class PlayerButtons {
-    static ACTION_BTN_COLORS = {
-        "mouseover": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
-        "mouseleave": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))",
-        "mousedown": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
-        "mouseup": "radial-gradient(rgb(200, 200, 0), rgb(200, 130, 0), rgb(200, 0, 0))",
-        "touchstart": "radial-gradient(rgb(150, 150, 0), rgb(150, 97, 0), rgb(150, 0, 0))",
-        "touchend": "radial-gradient(rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 0, 0))"
-    };
-
-    constructor() {
-        this.__chips = new Chips();
-        this.__chipButtons = this.__chips.chips;
-
-        this.__hit = document.getElementById("hit");
-        this.__stand = document.getElementById("stand");
-        this.__doubleDown = document.getElementById("double-down");
-        this.__split = document.getElementById("split");
-        this.__fold = document.getElementById("fold");
-        this.__allIn = document.getElementById("all-in");
-        this.__deal = document.getElementById("deal");
-        this.__reset = document.getElementById("reset");
-        this.__playAgain = document.getElementById("play-again");
-        this.__cashout = document.getElementById("cashout");
-
-        this.__actionButtons = [
-            this.__hit,
-            this.__stand,
-            this.__doubleDown,
-            this.__split,
-            this.__fold,
-            this.__allIn,
-            this.__deal,
-            this.__reset,
-            this.__playAgain,
-            this.__cashout
-        ];
-
-        for (let i = 0; i < this.__actionButtons.length; i++) {
-            let btn = this.__actionButtons[i];
-
-            btn.addEventListener("mouseover", (e) => {
-                (e.target).style.backgroundImage = PlayerButtons.ACTION_BTN_COLORS["mouseover"];
-            });
-            btn.addEventListener("mouseleave", (e) => {
-                (e.target).style.backgroundImage = PlayerButtons.ACTION_BTN_COLORS["mouseleave"];
-            });
-            btn.addEventListener("mousedown", (e) => {
-                (e.target).style.backgroundImage = PlayerButtons.ACTION_BTN_COLORS["mousedown"];
-            });
-            btn.addEventListener("mouseup", (e) => {
-                (e.target).style.backgroundImage = PlayerButtons.ACTION_BTN_COLORS["mouseup"];
-            });
-            btn.addEventListener("touchstart", (e) => {
-                (e.target).style.backgroundImage = PlayerButtons.ACTION_BTN_COLORS["touchstart"];
-            });
-            btn.addEventListener("touchend", (e) => {
-                (e.target).style.backgroundImage = PlayerButtons.ACTION_BTN_COLORS["touchend"];
             })
         }
 
@@ -1123,6 +1046,40 @@ class PlayerButtons {
             counters.updateTotals();
             player.deal();
         });
+    }
+
+    get actions() {
+        return this.__actions;
+    }
+
+    disable() {
+        ActionButtons.PLAYER_BET_BUTTONS.setAttribute("inert", "");
+        ActionButtons.PLAYER_ACTION_BUTTONS.setAttribute("inert", "");
+    }
+
+    enable() {
+        if (ActionButtons.PLAYER_BET_BUTTONS.attributes.getNamedItem("inert")) {
+            ActionButtons.PLAYER_BET_BUTTONS.removeAttribute("inert");
+        }
+        if (ActionButtons.PLAYER_ACTION_BUTTONS.attributes.getNamedItem("inert")) {
+            ActionButtons.PLAYER_ACTION_BUTTONS.removeAttribute("inert");
+        }
+    }
+}
+
+
+class PlayerButtons {
+    constructor() {
+        this.__chips = new Chips();
+        this.__actions = new ActionButtons();
+    }
+
+    get chips() {
+        return this.__chips.chips;
+    }
+
+    get actions() {
+        return this.__actions.actions;
     }
 
     disableChipButtons() {
