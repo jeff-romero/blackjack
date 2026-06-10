@@ -238,6 +238,19 @@ span.counter-caption {
     /* padding-inline: 1vw; */
 }
 
+/* @media screen and (200px <= width <= 800px) {
+    #controls {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        z-index: 1;
+        background-color: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        gap: 3.5vw;
+        padding-block: 1vw;
+    }
+} */
+
 #chips-wrapper {
     position: relative;
     /* flex: 1; */
@@ -358,7 +371,7 @@ button.action {
     overflow-wrap: break-word;
     padding: 0.5vw;
     flex: 0.5;
-    border: 0.4vw outset black;
+    border: none;
     /* background-image: conic-gradient(from 45deg, rgb(255, 165, 0), rgb(255, 115, 0), rgb(255, 90, 0), rgb(255, 115, 0), rgb(255, 165, 0)); */
     background-image: radial-gradient(yellow, orange, red);
     color: black;
